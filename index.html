@@ -1,0 +1,1529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Slop Blast">
+  <meta name="theme-color" content="#0b0d17">
+  <title>Slop Blast Offline</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <style>
+    :root {
+      --bg: #0b0d17;
+      --panel: rgba(24, 29, 48, 0.95);
+      --text: #eceff8;
+      --muted: #8b93b1;
+      --accent: #7ee7ff;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      position: fixed;
+      inset: 0;
+    }
+
+    /* Splash */
+    #splash {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.7s ease, visibility 0.7s;
+      padding: 24px;
+    }
+    #splash.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .logo { display: grid; grid-template-columns: repeat(4, 20px); gap: 7px; margin-bottom: 18px; }
+    .logo span { width: 20px; height: 20px; border-radius: 4px; animation: pop 0.85s infinite alternate; box-shadow: inset -2px -2px 0 rgba(0,0,0,0.25), inset 2px 2px 0 rgba(255,255,255,0.25); }
+    .logo span:nth-child(1) { background: #00f0f0; animation-delay: 0s; }
+    .logo span:nth-child(2) { background: #ff9500; animation-delay: 0.1s; }
+    .logo span:nth-child(3) { background: #00dd55; animation-delay: 0.2s; }
+    .logo span:nth-child(4) { background: #ff2222; animation-delay: 0.3s; }
+    #splash h1 { margin: 0; font-size: 34px; letter-spacing: 4px; color: var(--accent); text-shadow: 0 2px 12px rgba(126,231,255,0.35); }
+    #splash p { margin: 8px 0 18px; color: var(--muted); font-size: 13px; }
+    .splash-scores { width: 100%; max-width: 320px; }
+    .splash-scores h3 { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin: 10px 0 4px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 2px; }
+    .score-row { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; }
+    .score-row .pts { font-weight: 700; color: var(--accent); }
+    .score-row .dt { color: #6c7391; font-size: 11px; }
+    .no-scores { color: #6c7391; font-size: 12px; text-align: center; margin-top: 6px; }
+    @keyframes pop { from { transform: scale(1); opacity: 0.7; } to { transform: scale(1.25); opacity: 1; } }
+
+    /* Top bar */
+    #topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: calc(56px + env(safe-area-inset-top));
+      padding: env(safe-area-inset-top) 14px 0 14px;
+      background: var(--panel);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    #scoreWrap { font-size: 18px; font-weight: 700; color: var(--accent); }
+    #topbar .btns { display: flex; gap: 8px; }
+    #topbar button {
+      background: rgba(126, 231, 255, 0.12);
+      border: 1px solid rgba(126,231,255,0.35);
+      color: var(--accent);
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    #toast {
+      position: fixed;
+      top: calc(64px + env(safe-area-inset-top));
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 60, 80, 0.92);
+      color: #fff;
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      z-index: 30;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    #toast.show { opacity: 1; }
+
+    /* Game grid */
+    #grid {
+      position: fixed;
+      top: calc(56px + env(safe-area-inset-top));
+      left: 0;
+      right: 0;
+      bottom: calc(clamp(88px, 17vh, 118px) + env(safe-area-inset-bottom));
+      display: block;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* Floating pieces tray */
+    #tray {
+      position: fixed;
+      bottom: env(safe-area-inset-bottom);
+      left: 0;
+      right: 0;
+      height: clamp(88px, 17vh, 118px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 14px;
+      padding: 8px 16px 12px;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .slot {
+      flex: 1 1 0;
+      max-width: 105px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      pointer-events: auto;
+      touch-action: none;
+      cursor: grab;
+      transition: transform 0.08s ease;
+    }
+    .slot:active { transform: scale(0.96); }
+    .slot.dragging canvas { opacity: 0.38; filter: grayscale(0.45); }
+    .slot canvas { display: block; max-width: 95%; max-height: 95%; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.4)); transition: opacity 0.15s ease, filter 0.15s ease; }
+
+    .slot-next-ghost {
+      position: absolute;
+      right: -4px;
+      bottom: -4px;
+      opacity: 0.32;
+      pointer-events: none;
+      z-index: 5;
+      transform: scale(0.75);
+      transform-origin: right bottom;
+    }
+    .slot-next-ghost canvas { display: block; }
+
+    .drag-ghost {
+      position: fixed;
+      pointer-events: none;
+      z-index: 100;
+      touch-action: none;
+    }
+    .drag-ghost .gcell {
+      position: absolute;
+      border-radius: 5px;
+      box-shadow: inset 2px 2px 0 rgba(255,255,255,0.28), inset -2px -2px 0 rgba(0,0,0,0.28);
+    }
+
+    .score-popup {
+      position: fixed;
+      pointer-events: none;
+      z-index: 25;
+      font-weight: 800;
+      font-size: 23px;
+      color: #fff;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.55), 0 0 18px rgba(126,231,255,0.6);
+      transition: opacity 0.45s ease;
+    }
+
+    /* Modals */
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      background: rgba(5,7,14,0.94);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .modal.hidden { display: none; }
+    .modal-content {
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 460px;
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .modal-scroll {
+      flex: 1 1 auto;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 22px;
+    }
+    .modal-scroll h2 { margin: 0 0 16px; color: var(--accent); }
+    .modal-scroll h3 { margin: 18px 0 10px; font-size: 15px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.7px; }
+    .modal-footer {
+      flex: 0 0 auto;
+      padding: 12px 22px 16px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      background: var(--panel);
+      text-align: right;
+    }
+    .modal-footer button {
+      padding: 12px 28px;
+      border: none;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
+      color: #fff;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    .difficulty { display: flex; gap: 8px; flex-wrap: wrap; }
+    .difficulty label {
+      flex: 1 1 auto;
+      min-width: 80px;
+      text-align: center;
+      padding: 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.04);
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .difficulty input { position: absolute; opacity: 0; pointer-events: none; }
+    .difficulty label:has(input:checked) { border-color: var(--accent); background: rgba(126,231,255,0.12); color: var(--accent); font-weight: 700; }
+
+    .mystery-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.04);
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+    .mystery-toggle input { width: 18px; height: 18px; accent-color: var(--accent); }
+    .mystery-toggle span { font-size: 14px; }
+    .mystery-slider {
+      display: none;
+      margin: 6px 0 14px;
+      padding: 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.04);
+    }
+    .mystery-slider.show { display: block; }
+    .mystery-slider span { display: flex; justify-content: space-between; font-size: 13px; color: var(--text); margin-bottom: 8px; }
+    .mystery-slider input[type="range"] { width: 100%; accent-color: var(--accent); }
+
+    #pieceToggles {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+      gap: 10px;
+    }
+    .piece-toggle {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 8px;
+      text-align: center;
+      cursor: pointer;
+      position: relative;
+    }
+    .piece-toggle input {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+    }
+    .piece-toggle canvas { display: block; margin: 18px auto 4px; }
+    .piece-toggle span { font-size: 11px; color: var(--muted); }
+
+    .settings-scores { margin-top: 14px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.08); }
+    .settings-scores h3 { margin-top: 0; }
+
+    #gameOverModal .modal-content { text-align: center; }
+    #gameOverModal p { font-size: 16px; margin: 6px 0; color: #c2c8dc; }
+    #gameOverModal .big { font-size: 30px; font-weight: 700; color: var(--accent); margin: 10px 0; }
+    #restartBtn { margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div id="splash">
+    <div class="logo">
+      <span></span><span></span><span></span><span></span>
+    </div>
+    <h1>SLOP BLAST</h1>
+    <p>drag · drop · blast · shift</p>
+    <div class="splash-scores" id="splashScores"></div>
+  </div>
+
+  <div id="topbar">
+    <div id="scoreWrap">Score: <span id="scoreVal">0</span></div>
+    <div class="btns">
+      <button id="newGameBtn">New Game</button>
+      <button id="settingsBtn">Settings</button>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <canvas id="grid"></canvas>
+
+  <div id="tray">
+    <div class="slot" data-idx="0"><canvas></canvas></div>
+    <div class="slot" data-idx="1"><canvas></canvas></div>
+    <div class="slot" data-idx="2"><canvas></canvas></div>
+  </div>
+
+  <div id="settingsModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-scroll">
+        <h2>Settings</h2>
+        <div class="difficulty" id="difficulty">
+          <label><input type="radio" name="diff" value="easy"> Easy</label>
+          <label><input type="radio" name="diff" value="medium" checked> Medium</label>
+          <label><input type="radio" name="diff" value="hard"> Hard</label>
+        </div>
+
+        <h3>Mystery piece for this mode</h3>
+        <label class="mystery-toggle">
+          <input type="checkbox" id="mysteryToggle">
+          <span>Place a mystery emoji on the board</span>
+        </label>
+        <div class="mystery-slider" id="mysterySliderWrap">
+          <span>Easy mystery chance: <b id="mysteryChanceVal">80%</b></span>
+          <input type="range" id="mysteryChance" min="1" max="100" value="80">
+        </div>
+
+        <h3>Available pieces for this mode</h3>
+        <div id="pieceToggles"></div>
+
+        <div class="settings-scores" id="settingsScores"></div>
+      </div>
+      <div class="modal-footer">
+        <button id="closeSettings">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="gameOverModal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Game Over</h2>
+      <p>Final score</p>
+      <div class="big" id="finalScore">0</div>
+      <p id="finalStats"></p>
+      <button id="restartBtn">New Game</button>
+    </div>
+  </div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(err => console.log('SW failed', err));
+    }
+
+    setTimeout(() => {
+      const splash = document.getElementById('splash');
+      if (splash) splash.classList.add('hidden');
+    }, 3500);
+
+    /* === Config === */
+    const N = 8;
+    const EXPLOSION_DURATION = 260;
+    const POPUP_DURATION = 650;
+    const COLORS = {
+      1: '#00f0f0', 2: '#ffdd00', 3: '#ff9500', 4: '#00dd55',
+      5: '#aa44ff', 6: '#ff2222', 7: '#0055ff', 8: '#ff66cc', 9: '#66ffcc'
+    };
+    const BASES = [
+      { name: 'Monomino', id: 1, m: [[1]] },
+      { name: 'Domino',   id: 2, m: [[2,2]] },
+      { name: 'Tri I',    id: 3, m: [[3,3,3]] },
+      { name: 'Tri L',    id: 4, m: [[4,0],[4,4]] },
+      { name: 'Tet I',    id: 5, m: [[5,5,5,5]] },
+      { name: 'Tet O',    id: 6, m: [[6,6],[6,6]] },
+      { name: 'Tet T',    id: 7, m: [[0,7,0],[7,7,7]] },
+      { name: 'Tet L',    id: 8, m: [[0,0,8],[8,8,8]] },
+      { name: 'Tet S',    id: 9, m: [[0,9,9],[9,9,0]] }
+    ];
+    const POSITIVE_EMOJIS = ['🎁','⭐','💎','🔥','🍀','⚡','🌈','🦄','🎯','💣'];
+    const NEGATIVE_EMOJIS = ['😡','💩','🛑','🚫','🤢','👎','🧨','☠️'];
+    const MYSTERY_LIFESPAN = 3;
+
+    /* === State === */
+    const gridCanvas = document.getElementById('grid');
+    const gridCtx = gridCanvas.getContext('2d');
+    const tray = document.getElementById('tray');
+    const slots = Array.from(document.querySelectorAll('.slot'));
+    let dpr = window.devicePixelRatio || 1;
+
+    let board = [];
+    let hand = [null, null, null];
+    let score = 0;
+    let difficulty = 'medium';
+    let profiles = {};
+    let scores = { easy: [], medium: [], hard: [] };
+    let allPieces = [];
+    let drag = null;
+    let gridX = 0, gridY = 0, cellSize = 0;
+    let explosions = [];
+    let animFrame = null;
+    let pendingNextPiece = null;
+    let pendingSlot = -1;
+    let pendingGhostEl = null;
+    let lineShift = null;
+    let mystery = null;
+    let scorePopups = [];
+    let mysteryBursts = [];
+    let moveCount = 0;
+
+    /* === Piece generation === */
+    function rotateMatrix(m) {
+      const H = m.length, W = m[0].length;
+      const out = Array.from({length: W}, () => Array(H).fill(0));
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+          out[x][H - 1 - y] = m[y][x];
+        }
+      }
+      return out;
+    }
+    function matrixStr(m) { return JSON.stringify(m); }
+
+    function buildPieces() {
+      allPieces = [];
+      BASES.forEach(b => {
+        const seen = [];
+        let m = b.m;
+        for (let i = 0; i < 4; i++) {
+          const s = matrixStr(m);
+          if (!seen.includes(s)) {
+            seen.push(s);
+            allPieces.push({
+              key: `${b.name}:${i}`,
+              baseName: b.name,
+              id: b.id,
+              rows: m.length,
+              cols: m[0].length,
+              matrix: m.map(r => r.slice()),
+              enabled: true
+            });
+          }
+          m = rotateMatrix(m);
+        }
+      });
+    }
+    buildPieces();
+
+    ['easy','medium','hard'].forEach(m => {
+      profiles[m] = { enabledKeys: allPieces.map(p => p.key), mystery: true, mysteryChance: 80 };
+    });
+
+    /* === Profiles / Scores === */
+    function loadProfiles() {
+      try {
+        const raw = localStorage.getItem('slopblast_profiles');
+        if (raw) {
+          const data = JSON.parse(raw);
+          if (data.difficulty && profiles[data.difficulty]) difficulty = data.difficulty;
+          ['easy','medium','hard'].forEach(m => {
+            if (data[m] && Array.isArray(data[m].enabledKeys)) {
+              profiles[m].enabledKeys = data[m].enabledKeys;
+              if (typeof data[m].mystery === 'boolean') profiles[m].mystery = data[m].mystery;
+              if (typeof data[m].mysteryChance === 'number') profiles[m].mysteryChance = data[m].mysteryChance;
+            }
+          });
+        }
+      } catch(e) {}
+      applyProfile(difficulty);
+    }
+    function saveProfiles() {
+      try {
+        const data = { difficulty, easy: profiles.easy, medium: profiles.medium, hard: profiles.hard };
+        localStorage.setItem('slopblast_profiles', JSON.stringify(data));
+      } catch(e) {}
+    }
+    function applyProfile(mode) {
+      const keys = profiles[mode].enabledKeys;
+      allPieces.forEach(p => { p.enabled = keys.includes(p.key); });
+    }
+    function enabledPieces() {
+      const keys = profiles[difficulty].enabledKeys;
+      const list = allPieces.filter(p => keys.includes(p.key));
+      if (list.length === 0) list.push(allPieces[0]);
+      return list;
+    }
+
+    function loadScores() {
+      try {
+        const raw = localStorage.getItem('slopblast_scores');
+        if (raw) {
+          const data = JSON.parse(raw);
+          ['easy','medium','hard'].forEach(m => {
+            if (Array.isArray(data[m])) scores[m] = data[m].slice(0, 3);
+          });
+        }
+      } catch(e) {}
+    }
+    function saveScore(mode, value) {
+      if (value <= 0) return;
+      scores[mode].push({ score: value, date: new Date().toISOString(), displayDate: new Date().toLocaleString(), mystery: profiles[mode].mystery });
+      scores[mode].sort((a, b) => b.score - a.score);
+      scores[mode] = scores[mode].slice(0, 3);
+      try { localStorage.setItem('slopblast_scores', JSON.stringify(scores)); } catch(e) {}
+    }
+    function mysteryIcon(on) { return on ? '<span style="color:#ffd700">✨</span>' : '<span style="color:#6c7391">✱</span>'; }
+    function formatTopScores(rows) {
+      if (rows.length === 0) return '<div class="no-scores">No scores yet</div>';
+      return rows.map(r => `<div class="score-row"><span class="dt">${mysteryIcon(r.mystery)} ${r.displayDate}</span><span class="pts">${r.score}</span></div>`).join('');
+    }
+    function renderSplashScores() {
+      const el = document.getElementById('splashScores');
+      el.innerHTML = ['easy','medium','hard'].map(m => {
+        return `<h3>${m} top scores</h3>${formatTopScores(scores[m])}`;
+      }).join('');
+    }
+    function renderSettingsScores() {
+      const el = document.getElementById('settingsScores');
+      const rows = scores[difficulty];
+      el.innerHTML = `<h3>Top scores · ${difficulty}</h3>${formatTopScores(rows)}`;
+    }
+
+    /* === Vibration === */
+    function vibrate(ms) {
+      if ('vibrate' in navigator && navigator.vibrate) navigator.vibrate(ms);
+    }
+
+    /* === Color helpers === */
+    function hexToRgb(hex) {
+      const v = hex.replace('#', '');
+      return {
+        r: parseInt(v.substring(0,2), 16),
+        g: parseInt(v.substring(2,4), 16),
+        b: parseInt(v.substring(4,6), 16)
+      };
+    }
+    function rgbToHex(r, g, b) {
+      const f = n => Math.max(0, Math.min(255, Math.round(n))).toString(16).padStart(2,'0');
+      return `#${f(r)}${f(g)}${f(b)}`;
+    }
+    function shade(hex, percent) {
+      const c = hexToRgb(hex);
+      const mul = 1 + percent / 100;
+      return rgbToHex(c.r * mul, c.g * mul, c.b * mul);
+    }
+
+    /* === Board & Hand === */
+    function resetBoard() {
+      board = Array.from({length: N}, () => Array(N).fill(0));
+      mystery = null;
+    }
+
+    function randomPiece() {
+      const list = enabledPieces();
+      return list[Math.floor(Math.random() * list.length)];
+    }
+
+    function fillHand() {
+      for (let i = 0; i < 3; i++) {
+        if (!hand[i]) hand[i] = randomPiece();
+      }
+    }
+
+    function removePendingGhost() {
+      if (pendingGhostEl) { pendingGhostEl.remove(); pendingGhostEl = null; }
+      pendingNextPiece = null;
+      pendingSlot = -1;
+    }
+
+    function afterPlace(slotIdx) {
+      hand[slotIdx] = null;
+      if (difficulty === 'easy') {
+        if (pendingSlot === slotIdx && pendingNextPiece) {
+          hand[slotIdx] = pendingNextPiece;
+          removePendingGhost();
+        } else {
+          hand[slotIdx] = randomPiece();
+        }
+      } else if (difficulty === 'medium') {
+        const remaining = hand.filter(Boolean).length;
+        if (remaining < 2) {
+          for (let i = 0; i < 3; i++) if (!hand[i]) hand[i] = randomPiece();
+        }
+      } else {
+        if (hand.every(h => !h)) for (let i = 0; i < 3; i++) hand[i] = randomPiece();
+      }
+      drawTray();
+      checkGameOver();
+    }
+
+    function canPlacePiece(p) {
+      for (let r = 0; r <= N - p.rows; r++) {
+        for (let c = 0; c <= N - p.cols; c++) {
+          if (isValidPlacement(p, r, c)) return true;
+        }
+      }
+      return false;
+    }
+
+    function commitPendingScore() {
+      scorePopups.forEach(p => { score += p.value - p.current; p.current = p.value; });
+      scorePopups.forEach(p => p.el.remove());
+      scorePopups = [];
+      updateScore();
+    }
+
+    function checkGameOver() {
+      const available = hand.filter(Boolean);
+      if (available.length === 0) return false;
+      const any = available.some(p => canPlacePiece(p));
+      if (!any) {
+        commitPendingScore();
+        document.getElementById('finalScore').textContent = score;
+        document.getElementById('finalStats').textContent = `Mode: ${difficulty}`;
+        document.getElementById('gameOverModal').classList.remove('hidden');
+        saveScore(difficulty, score);
+        renderSplashScores();
+        vibrate(120);
+      }
+      return !any;
+    }
+
+    function isValidPlacement(piece, r, c) {
+      for (let y = 0; y < piece.rows; y++) {
+        for (let x = 0; x < piece.cols; x++) {
+          if (piece.matrix[y][x] !== 0) {
+            const rr = r + y, cc = c + x;
+            if (rr < 0 || rr >= N || cc < 0 || cc >= N || board[rr][cc] !== 0) return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    function placePiece(piece, r, c, slotIdx) {
+      let placed = 0;
+      for (let y = 0; y < piece.rows; y++) {
+        for (let x = 0; x < piece.cols; x++) {
+          if (piece.matrix[y][x] !== 0) {
+            board[r + y][c + x] = piece.id;
+            placed++;
+          }
+        }
+      }
+      score += placed * 10;
+      vibrate(30);
+      clearLines();
+      advanceMystery();
+      updateScore();
+      afterPlace(slotIdx);
+      startAnimate();
+    }
+
+    /* === Mystery === */
+    function randomEmoji(nuisance) {
+      const list = nuisance ? NEGATIVE_EMOJIS : POSITIVE_EMOJIS;
+      return list[Math.floor(Math.random() * list.length)];
+    }
+    function removeMystery() {
+      if (!mystery) return;
+      board[mystery.r][mystery.c] = 0;
+      mystery = null;
+    }
+    function placeMystery(nuisance) {
+      if (!profiles[difficulty].mystery || mystery) return;
+      const empties = [];
+      for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (board[r][c] === 0) empties.push([r, c]);
+      if (empties.length === 0) return;
+      const [r, c] = empties[Math.floor(Math.random() * empties.length)];
+      mystery = { r, c, emoji: randomEmoji(nuisance), age: 0, nuisance };
+      board[r][c] = -1;
+    }
+    function advanceMystery() {
+      moveCount++;
+      if (mystery) {
+        mystery.age++;
+        if (mystery.age >= MYSTERY_LIFESPAN) removeMystery();
+      }
+      if (!mystery && profiles[difficulty].mystery) {
+        let chance = 0;
+        if (difficulty === 'easy') {
+          chance = profiles.easy.mysteryChance;
+        } else if (difficulty === 'medium') {
+          if (moveCount % 3 === 0) chance = 20;
+        } else { // hard: random / frequent nuisance
+          chance = 75;
+        }
+        if (Math.random() * 100 < chance) {
+          placeMystery(difficulty === 'hard');
+        }
+      }
+      draw();
+    }
+    function rollMysteryMultiplier() {
+      const r = Math.random();
+      if (r < 0.5) return 2;
+      if (r < 0.8) return 3;
+      if (r < 0.95) return 4;
+      return 5;
+    }
+
+    /* === Line shift === */
+    function shiftLineCost() {
+      if (difficulty === 'easy') return 0;
+      if (difficulty === 'medium') return 100;
+      return Math.max(100, Math.floor(score / 2));
+    }
+    function canShiftLine() {
+      return difficulty === 'easy' || score >= shiftLineCost();
+    }
+    function shiftRow(r, dir) {
+      if (dir > 0) { // right
+        const last = board[r][N - 1];
+        for (let c = N - 1; c > 0; c--) board[r][c] = board[r][c - 1];
+        board[r][0] = last;
+      } else { // left
+        const first = board[r][0];
+        for (let c = 0; c < N - 1; c++) board[r][c] = board[r][c + 1];
+        board[r][N - 1] = first;
+      }
+      updateMysteryAfterShift(r, null);
+    }
+    function shiftCol(c, dir) {
+      if (dir > 0) { // down
+        const last = board[N - 1][c];
+        for (let r = N - 1; r > 0; r--) board[r][c] = board[r - 1][c];
+        board[0][c] = last;
+      } else { // up
+        const first = board[0][c];
+        for (let r = 0; r < N - 1; r++) board[r][c] = board[r + 1][c];
+        board[N - 1][c] = first;
+      }
+      updateMysteryAfterShift(null, c);
+    }
+    function updateMysteryAfterShift(row, col) {
+      if (!mystery) return;
+      if (row !== null && mystery.r === row) { /* still in same row after wrap */ }
+      if (col !== null && mystery.c === col) { /* still in same col after wrap */ }
+      // find where the mystery ended up after wrap
+      for (let r = 0; r < N; r++) {
+        for (let c = 0; c < N; c++) {
+          if (board[r][c] === -1) { mystery.r = r; mystery.c = c; return; }
+        }
+      }
+      mystery = null;
+    }
+    function cancelLineHold() {
+      if (lineShift && lineShift.holdTimer) clearTimeout(lineShift.holdTimer);
+      lineShift = null;
+      draw();
+    }
+
+    /* === Toast === */
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 1600);
+    }
+
+    /* === Lines & Scoring === */
+    function lineHasNuisance(r, c, type) {
+      if (!mystery || !mystery.nuisance) return false;
+      if (type === 'row') return mystery.r === r;
+      if (type === 'col') return mystery.c === c;
+      if (type === 'diag1') return mystery.r === mystery.c;
+      if (type === 'diag2') return mystery.r + mystery.c === N - 1;
+      return false;
+    }
+
+    function clearLines() {
+      const toClear = new Set();
+
+      // rows
+      for (let r = 0; r < N; r++) {
+        if (board[r].every(v => v !== 0) && !lineHasNuisance(r, 0, 'row')) {
+          for (let c = 0; c < N; c++) toClear.add(`${r},${c}`);
+        }
+      }
+      // columns
+      for (let c = 0; c < N; c++) {
+        let full = true;
+        for (let r = 0; r < N; r++) if (board[r][c] === 0) { full = false; break; }
+        if (full && !lineHasNuisance(0, c, 'col')) {
+          for (let r = 0; r < N; r++) toClear.add(`${r},${c}`);
+        }
+      }
+      // main diagonal
+      let d1 = true;
+      for (let i = 0; i < N; i++) if (board[i][i] === 0) { d1 = false; break; }
+      if (d1 && !lineHasNuisance(0, 0, 'diag1')) {
+        for (let i = 0; i < N; i++) toClear.add(`${i},${i}`);
+      }
+      // anti diagonal
+      let d2 = true;
+      for (let i = 0; i < N; i++) if (board[i][N - 1 - i] === 0) { d2 = false; break; }
+      if (d2 && !lineHasNuisance(0, N - 1, 'diag2')) {
+        for (let i = 0; i < N; i++) toClear.add(`${i},${N - 1 - i}`);
+      }
+
+      if (toClear.size === 0) return;
+
+      const now = performance.now();
+      let mysteryCleared = false;
+      let mysteryCellX = 0, mysteryCellY = 0;
+      let cellsCleared = 0;
+      let clearCenterX = 0, clearCenterY = 0;
+
+      toClear.forEach(k => {
+        const [rr, cc] = k.split(',').map(Number);
+        if (mystery && mystery.r === rr && mystery.c === cc) {
+          mysteryCleared = true;
+          mysteryCellX = gridX + cc * cellSize + cellSize / 2;
+          mysteryCellY = gridY + rr * cellSize + cellSize / 2;
+        }
+        clearCenterX += gridX + cc * cellSize + cellSize / 2;
+        clearCenterY += gridY + rr * cellSize + cellSize / 2;
+        cellsCleared++;
+        const colorId = board[rr][cc];
+        board[rr][cc] = 0;
+        if (colorId > 0) {
+          explosions.push({ x: gridX + cc * cellSize, y: gridY + rr * cellSize, colorId, start: now });
+        }
+      });
+
+      // remove cleared mystery
+      if (mystery && toClear.has(`${mystery.r},${mystery.c}`)) mystery = null;
+
+      clearCenterX /= cellsCleared;
+      clearCenterY /= cellsCleared;
+
+      if (mysteryCleared) {
+        mysteryBursts.push({ x: mysteryCellX, y: mysteryCellY, start: now });
+        const multiplier = rollMysteryMultiplier();
+        const points = cellsCleared * 10 * multiplier;
+        spawnScorePopup(clearCenterX, clearCenterY, points, `x${multiplier}`);
+      } else {
+        spawnScorePopup(clearCenterX, clearCenterY, cellsCleared * 10, null);
+      }
+
+      startAnimate();
+    }
+
+    function spawnScorePopup(x, y, value, label) {
+      const el = document.createElement('div');
+      el.className = 'score-popup';
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+      el.textContent = '+' + value;
+      document.body.appendChild(el);
+      scorePopups.push({ el, x, y, value, current: 0, start: performance.now(), label });
+    }
+
+    function updateScorePopups() {
+      const now = performance.now();
+      for (let i = scorePopups.length - 1; i >= 0; i--) {
+        const p = scorePopups[i];
+        const t = Math.min(1, (now - p.start) / POPUP_DURATION);
+        const target = Math.round(t * p.value);
+        const delta = target - p.current;
+        if (delta > 0) {
+          score += delta;
+          p.current = target;
+          updateScore();
+        }
+        p.el.textContent = (p.label ? p.label + ' ' : '') + '+' + p.current;
+        p.el.style.transform = `translateY(${-28 * t}px)`;
+        p.el.style.opacity = t < 0.7 ? 1 : 1 - (t - 0.7) / 0.3;
+
+        if (t >= 1) {
+          p.el.remove();
+          scorePopups.splice(i, 1);
+        }
+      }
+    }
+
+    function updateScore() {
+      document.getElementById('scoreVal').textContent = score;
+    }
+
+    /* === Drawing === */
+    function resize() {
+      const rect = gridCanvas.getBoundingClientRect();
+      gridCanvas.width = Math.max(1, rect.width * dpr);
+      gridCanvas.height = Math.max(1, rect.height * dpr);
+
+      const trayRect = tray.getBoundingClientRect();
+      const reserveBottom = trayRect.height + 12;
+      const availH = Math.max(100, rect.height - reserveBottom);
+      cellSize = Math.min(rect.width - 16, availH) / N;
+      gridX = (rect.width - N * cellSize) / 2;
+      gridY = Math.max(6, (rect.height - reserveBottom - N * cellSize) / 2);
+
+      draw();
+      drawTray();
+    }
+
+    function drawBlock(ctx, x, y, size, colorId) {
+      const color = colorId === -1 ? '#2a2350' : COLORS[colorId];
+
+      // base
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, size, size);
+
+      // light top-left bevel
+      const light = colorId === -1 ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.32)';
+      ctx.fillStyle = light;
+      ctx.fillRect(x, y, size, size * 0.17);
+      ctx.fillRect(x, y, size * 0.17, size);
+
+      // dark bottom-right bevel
+      ctx.fillStyle = 'rgba(0,0,0,0.36)';
+      ctx.fillRect(x, y + size * 0.83, size, size * 0.17);
+      ctx.fillRect(x + size * 0.83, y, size * 0.17, size);
+
+      // inner pixel highlight
+      ctx.fillStyle = 'rgba(255,255,255,0.14)';
+      ctx.fillRect(x + size * 0.22, y + size * 0.22, size * 0.28, size * 0.28);
+      ctx.fillRect(x + size * 0.55, y + size * 0.55, size * 0.22, size * 0.22);
+      ctx.fillStyle = 'rgba(0,0,0,0.15)';
+      ctx.fillRect(x + size * 0.55, y + size * 0.22, size * 0.22, size * 0.22);
+
+      // outline
+      ctx.strokeStyle = '#05070d';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(x - 0.5, y - 0.5, size + 1, size + 1);
+    }
+
+    function drawMysteryCell(r, c) {
+      if (!mystery || mystery.r !== r || mystery.c !== c) return;
+      const x = gridX + c * cellSize;
+      const y = gridY + r * cellSize;
+      const pulse = 0.6 + 0.4 * Math.sin(performance.now() / 180);
+      gridCtx.save();
+      if (mystery.nuisance) {
+        gridCtx.fillStyle = `rgba(255, 40, 60, ${0.15 + 0.12 * pulse})`;
+        gridCtx.shadowColor = '#ff283c';
+      } else {
+        gridCtx.fillStyle = `rgba(255, 215, 0, ${0.14 + 0.12 * pulse})`;
+        gridCtx.shadowColor = 'gold';
+      }
+      gridCtx.fillRect(x - 3, y - 3, cellSize + 6, cellSize + 6);
+      gridCtx.shadowBlur = 14 * pulse;
+      gridCtx.font = `bold ${Math.floor(cellSize * 0.6)}px serif`;
+      gridCtx.textAlign = 'center';
+      gridCtx.textBaseline = 'middle';
+      gridCtx.fillText(mystery.emoji, x + cellSize / 2, y + cellSize / 2 + 2);
+      gridCtx.restore();
+    }
+
+    function drawLineShiftHighlight() {
+      if (!lineShift) return;
+      const { r, c, armed, mode, shifted } = lineShift;
+      const alpha = armed && !shifted ? 0.35 + 0.25 * Math.sin(performance.now() / 120) : 0.35;
+      gridCtx.save();
+      gridCtx.strokeStyle = `rgba(126, 231, 255, ${alpha + 0.3})`;
+      gridCtx.lineWidth = 3;
+      if (mode === 'row' || (!mode && armed)) {
+        gridCtx.strokeRect(gridX, gridY + r * cellSize, N * cellSize, cellSize);
+      }
+      if (mode === 'col' || (!mode && armed)) {
+        gridCtx.strokeRect(gridX + c * cellSize, gridY, cellSize, N * cellSize);
+      }
+      gridCtx.restore();
+    }
+
+    function draw() {
+      const rect = gridCanvas.getBoundingClientRect();
+      gridCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      gridCtx.clearRect(0, 0, rect.width, rect.height);
+
+      gridCtx.fillStyle = '#0a0c18';
+      gridCtx.fillRect(gridX, gridY, N * cellSize, N * cellSize);
+
+      // board drop shadow
+      gridCtx.save();
+      gridCtx.shadowColor = 'rgba(0,0,0,0.45)';
+      gridCtx.shadowBlur = 16;
+      gridCtx.fillStyle = '#0a0c18';
+      gridCtx.fillRect(gridX, gridY, N * cellSize, N * cellSize);
+      gridCtx.restore();
+
+      // inner grid lines
+      gridCtx.strokeStyle = 'rgba(255,255,255,0.06)';
+      gridCtx.lineWidth = 1;
+      gridCtx.beginPath();
+      for (let i = 0; i <= N; i++) {
+        const p = gridX + i * cellSize;
+        gridCtx.moveTo(p, gridY);
+        gridCtx.lineTo(p, gridY + N * cellSize);
+        const q = gridY + i * cellSize;
+        gridCtx.moveTo(gridX, q);
+        gridCtx.lineTo(gridX + N * cellSize, q);
+      }
+      gridCtx.stroke();
+
+      for (let r = 0; r < N; r++) {
+        for (let c = 0; c < N; c++) {
+          if (board[r][c] > 0) drawBlock(gridCtx, gridX + c * cellSize, gridY + r * cellSize, cellSize, board[r][c]);
+          if (mystery && mystery.r === r && mystery.c === c) drawMysteryCell(r, c);
+        }
+      }
+
+      if (drag && drag.targetR != null && drag.valid) {
+        gridCtx.globalAlpha = 0.45;
+        for (let y = 0; y < drag.piece.rows; y++) {
+          for (let x = 0; x < drag.piece.cols; x++) {
+            if (drag.piece.matrix[y][x] !== 0) {
+              drawBlock(gridCtx, gridX + (drag.targetC + x) * cellSize, gridY + (drag.targetR + y) * cellSize, cellSize, drag.piece.id);
+            }
+          }
+        }
+        gridCtx.globalAlpha = 1;
+      }
+
+      drawLineShiftHighlight();
+      drawExplosions();
+      drawMysteryBursts();
+    }
+
+    function drawExplosions() {
+      const now = performance.now();
+      for (let i = explosions.length - 1; i >= 0; i--) {
+        const p = explosions[i];
+        const t = Math.min(1, (now - p.start) / EXPLOSION_DURATION);
+        if (t >= 1) { explosions.splice(i, 1); continue; }
+        const alpha = 1 - t;
+        const size = cellSize * (1 + t * 0.7);
+        const cx = p.x + cellSize / 2;
+        const cy = p.y + cellSize / 2;
+        gridCtx.save();
+        gridCtx.globalAlpha = alpha;
+        gridCtx.fillStyle = COLORS[p.colorId];
+        gridCtx.shadowColor = COLORS[p.colorId];
+        gridCtx.shadowBlur = 14 * alpha;
+        gridCtx.fillRect(cx - size / 2, cy - size / 2, size, size);
+        gridCtx.restore();
+      }
+    }
+
+    function drawMysteryBursts() {
+      const now = performance.now();
+      for (let i = mysteryBursts.length - 1; i >= 0; i--) {
+        const b = mysteryBursts[i];
+        const t = Math.min(1, (now - b.start) / 500);
+        if (t >= 1) { mysteryBursts.splice(i, 1); continue; }
+        gridCtx.save();
+        gridCtx.globalAlpha = 1 - t;
+        gridCtx.strokeStyle = '#ffd700';
+        gridCtx.lineWidth = 4 * (1 - t * 0.5);
+        gridCtx.beginPath();
+        gridCtx.arc(b.x, b.y, cellSize * (0.4 + t * 1.6), 0, Math.PI * 2);
+        gridCtx.stroke();
+        gridCtx.restore();
+      }
+    }
+
+    function startAnimate() {
+      if (!animFrame) animFrame = requestAnimationFrame(animate);
+    }
+    function animate() {
+      draw();
+      updateScorePopups();
+      if (explosions.length || scorePopups.length || mysteryBursts.length) {
+        animFrame = requestAnimationFrame(animate);
+      } else {
+        animFrame = null;
+      }
+    }
+
+    function drawPieceOnCtx(ctx, piece, canvasW, canvasH, padding) {
+      ctx.clearRect(0, 0, canvasW, canvasH);
+      if (!piece) return;
+      const maxDim = Math.max(piece.rows, piece.cols);
+      let size = Math.floor(Math.min(canvasW - padding * 2, canvasH - padding * 2) / maxDim);
+      size = Math.min(size, 28);
+      const ox = (canvasW - piece.cols * size) / 2;
+      const oy = (canvasH - piece.rows * size) / 2;
+      for (let y = 0; y < piece.rows; y++) {
+        for (let x = 0; x < piece.cols; x++) {
+          if (piece.matrix[y][x] !== 0) {
+            drawBlock(ctx, ox + x * size, oy + y * size, size, piece.id);
+          }
+        }
+      }
+    }
+
+    function drawTray() {
+      slots.forEach((slot, idx) => {
+        const cvs = slot.querySelector('canvas');
+        const rect = slot.getBoundingClientRect();
+        cvs.width = Math.max(1, rect.width * dpr);
+        cvs.height = Math.max(1, rect.height * dpr);
+        const ctx = cvs.getContext('2d');
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, rect.width, rect.height);
+        if (hand[idx]) drawPieceOnCtx(ctx, hand[idx], rect.width, rect.height, 8);
+      });
+    }
+
+    /* === Drag & Drop === */
+    function startDrag(piece, slotIdx, clientX, clientY) {
+      slots[slotIdx].classList.add('dragging');
+      const slot = slots[slotIdx];
+      const rect = slot.getBoundingClientRect();
+      const maxDim = Math.max(piece.rows, piece.cols);
+      const drawnSize = Math.min(rect.width - 16, rect.height - 16);
+      const slotCell = Math.max(drawnSize / maxDim, 1);
+      const shapeW = piece.cols * slotCell;
+      const shapeH = piece.rows * slotCell;
+      const shapeX = rect.left + (rect.width - shapeW) / 2;
+      const shapeY = rect.top + (rect.height - shapeH) / 2;
+
+      let offsetCol = Math.round((clientX - shapeX) / slotCell);
+      let offsetRow = Math.round((clientY - shapeY) / slotCell);
+      offsetCol = Math.max(0, Math.min(offsetCol, piece.cols - 1));
+      offsetRow = Math.max(0, Math.min(offsetRow, piece.rows - 1));
+
+      if (piece.matrix[offsetRow][offsetCol] === 0) {
+        let best = null, bestD = Infinity;
+        for (let y = 0; y < piece.rows; y++) {
+          for (let x = 0; x < piece.cols; x++) {
+            if (piece.matrix[y][x] !== 0) {
+              const d = Math.hypot(x - offsetCol, y - offsetRow);
+              if (d < bestD) { bestD = d; best = {x, y}; }
+            }
+          }
+        }
+        if (best) { offsetCol = best.x; offsetRow = best.y; }
+      }
+
+      const ghostCellSize = Math.max(cellSize, 58);
+      const ghost = document.createElement('div');
+      ghost.className = 'drag-ghost';
+      ghost.style.width = (piece.cols * ghostCellSize) + 'px';
+      ghost.style.height = (piece.rows * ghostCellSize) + 'px';
+      for (let y = 0; y < piece.rows; y++) {
+        for (let x = 0; x < piece.cols; x++) {
+          if (piece.matrix[y][x] !== 0) {
+            const cell = document.createElement('div');
+            cell.className = 'gcell';
+            cell.style.width = ghostCellSize + 'px';
+            cell.style.height = ghostCellSize + 'px';
+            cell.style.left = (x * ghostCellSize) + 'px';
+            cell.style.top = (y * ghostCellSize) + 'px';
+            cell.style.background = COLORS[piece.id];
+            ghost.appendChild(cell);
+          }
+        }
+      }
+      document.body.appendChild(ghost);
+      drag = { piece, slotIdx, offsetCol, offsetRow, ghost, ghostCellSize };
+      moveDrag(clientX, clientY);
+
+      if (difficulty === 'easy') {
+        pendingSlot = slotIdx;
+        pendingNextPiece = randomPiece();
+        showSlotNextGhost(slotIdx, pendingNextPiece);
+      }
+      vibrate(15);
+    }
+
+    function showSlotNextGhost(slotIdx, piece) {
+      const slot = slots[slotIdx];
+      const wrap = document.createElement('div');
+      wrap.className = 'slot-next-ghost';
+      const cvs = document.createElement('canvas');
+      cvs.width = 48; cvs.height = 48;
+      drawPieceOnCtx(cvs.getContext('2d'), piece, 48, 48, 1);
+      wrap.appendChild(cvs);
+      slot.appendChild(wrap);
+      pendingGhostEl = wrap;
+    }
+
+    function moveDrag(clientX, clientY) {
+      if (!drag) return;
+      const g = drag.ghostCellSize;
+      drag.ghost.style.left = (clientX - drag.offsetCol * g) + 'px';
+      drag.ghost.style.top = (clientY - drag.offsetRow * g) + 'px';
+
+      const rect = gridCanvas.getBoundingClientRect();
+      const localX = clientX - rect.left - gridX;
+      const localY = clientY - rect.top - gridY;
+      drag.targetC = Math.round(localX / cellSize) - drag.offsetCol;
+      drag.targetR = Math.round(localY / cellSize) - drag.offsetRow;
+      drag.valid = isValidPlacement(drag.piece, drag.targetR, drag.targetC);
+      draw();
+    }
+
+    function endDrag(clientX, clientY) {
+      if (!drag) return;
+      const slotIdx = drag.slotIdx;
+      slots[slotIdx].classList.remove('dragging');
+
+      if (drag.valid) {
+        placePiece(drag.piece, drag.targetR, drag.targetC, slotIdx);
+        animateMagnetDrop();
+        removePendingGhost();
+      } else {
+        vibrate(15);
+        removePendingGhost();
+        animateReturn();
+      }
+    }
+
+    function animateMagnetDrop() {
+      const ghost = drag.ghost;
+      if (!ghost) { drag = null; return; }
+      const g = drag.ghostCellSize;
+      const rect = ghost.getBoundingClientRect();
+      const targetX = gridX + drag.targetC * cellSize;
+      const targetY = gridY + drag.targetR * cellSize;
+      const dx = targetX - rect.left;
+      const dy = targetY - rect.top;
+      const sx = cellSize / g;
+      const ox = drag.offsetCol;
+      const oy = drag.offsetRow;
+      // align so grabbed cell lands exactly on its target cell
+      const finalDx = dx + ox * cellSize - ox * g;
+      const finalDy = dy + oy * cellSize - oy * g;
+      const hover = 32;
+      const liftScale = 1.1;
+
+      if (ghost.animate) {
+        try {
+          ghost.animate([
+            { transform: `translate(0, -${hover}px) scale(${liftScale})`, opacity: 1, offset: 0 },
+            { transform: `translate(${finalDx}px, ${finalDy}px) scale(${sx})`, opacity: 0.9, offset: 0.6 },
+            { transform: `translate(${finalDx}px, ${finalDy}px) scale(${sx * 0.94})`, opacity: 0, offset: 1 }
+          ], { duration: 260, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'forwards' });
+        } catch(e) {}
+      }
+      setTimeout(() => { if (ghost) ghost.remove(); }, 300);
+      drag = null;
+    }
+
+    function animateReturn() {
+      const slotIdx = drag.slotIdx;
+      const ghost = drag.ghost;
+      if (!ghost || !ghost.animate) {
+        if (ghost) ghost.remove();
+        drag = null;
+        return;
+      }
+      const ghostRect = ghost.getBoundingClientRect();
+      const slotRect = slots[slotIdx].getBoundingClientRect();
+      const dx = slotRect.left - ghostRect.left;
+      const dy = slotRect.top - ghostRect.top;
+      try {
+        ghost.animate([
+          { transform: 'translate(0,0) scale(1)', opacity: 1 },
+          { transform: `translate(${dx}px, ${dy}px) scale(0.55)`, opacity: 0 }
+        ], { duration: 300, easing: 'ease-in-out', fill: 'forwards' });
+      } catch(e) {}
+      setTimeout(() => { if (ghost) ghost.remove(); }, 320);
+      drag = null;
+    }
+
+    slots.forEach(slot => {
+      slot.addEventListener('pointerdown', e => {
+        const idx = parseInt(slot.dataset.idx, 10);
+        const piece = hand[idx];
+        if (!piece || drag || lineShift) return;
+        e.preventDefault();
+        startDrag(piece, idx, e.clientX, e.clientY);
+        slot.setPointerCapture(e.pointerId);
+      });
+      slot.addEventListener('pointermove', e => {
+        if (!drag) return;
+        e.preventDefault();
+        moveDrag(e.clientX, e.clientY);
+      });
+      slot.addEventListener('pointerup', e => {
+        if (!drag) return;
+        e.preventDefault();
+        endDrag(e.clientX, e.clientY);
+        try { slot.releasePointerCapture(e.pointerId); } catch(err) {}
+      });
+      slot.addEventListener('pointercancel', () => {
+        if (drag) {
+          slots[drag.slotIdx].classList.remove('dragging');
+          drag.ghost.remove();
+          drag = null;
+          removePendingGhost();
+          draw();
+        }
+      });
+    });
+
+    /* === Grid line shift === */
+    gridCanvas.addEventListener('pointerdown', e => {
+      if (drag) return;
+      const rect = gridCanvas.getBoundingClientRect();
+      const x = e.clientX - rect.left - gridX;
+      const y = e.clientY - rect.top - gridY;
+      if (x < 0 || y < 0 || x > N * cellSize || y > N * cellSize) return;
+      const c = Math.min(N - 1, Math.max(0, Math.floor(x / cellSize)));
+      const r = Math.min(N - 1, Math.max(0, Math.floor(y / cellSize)));
+      // ignore if this cell is part of a piece being aimed at in a line? no
+      const timer = setTimeout(() => {
+        lineShift = { r, c, startX: e.clientX, startY: e.clientY, armed: true, shifted: false, mode: null, holdTimer: null };
+        vibrate(18);
+        draw();
+      }, 420);
+      lineShift = { r, c, startX: e.clientX, startY: e.clientY, armed: false, shifted: false, mode: null, holdTimer: timer };
+    });
+
+    gridCanvas.addEventListener('pointermove', e => {
+      if (!lineShift) return;
+      if (lineShift.shifted) return;
+      const dx = e.clientX - lineShift.startX;
+      const dy = e.clientY - lineShift.startY;
+
+      if (!lineShift.armed) {
+        if (Math.hypot(dx, dy) > 14) cancelLineHold();
+        return;
+      }
+
+      const threshold = cellSize * 0.55;
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > threshold) {
+        if (!canShiftLine()) {
+          showToast(`Need ${shiftLineCost()} points to shift`);
+          cancelLineHold();
+          return;
+        }
+        if (difficulty !== 'easy') score -= shiftLineCost();
+        updateScore();
+        shiftRow(lineShift.r, dx > 0 ? 1 : -1);
+        vibrate(25);
+        clearLines();
+        advanceMystery();
+        lineShift.shifted = true;
+        lineShift.mode = 'row';
+        startAnimate();
+      } else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > threshold) {
+        if (!canShiftLine()) {
+          showToast(`Need ${shiftLineCost()} points to shift`);
+          cancelLineHold();
+          return;
+        }
+        if (difficulty !== 'easy') score -= shiftLineCost();
+        updateScore();
+        shiftCol(lineShift.c, dy > 0 ? 1 : -1);
+        vibrate(25);
+        clearLines();
+        advanceMystery();
+        lineShift.shifted = true;
+        lineShift.mode = 'col';
+        startAnimate();
+      }
+    });
+
+    function endLineShift() {
+      if (!lineShift) return;
+      cancelLineHold();
+    }
+    gridCanvas.addEventListener('pointerup', endLineShift);
+    gridCanvas.addEventListener('pointercancel', endLineShift);
+
+    document.addEventListener('contextmenu', e => e.preventDefault());
+
+    /* === UI buttons === */
+    function newGame() {
+      explosions = [];
+      scorePopups.forEach(p => p.el.remove());
+      scorePopups = [];
+      mysteryBursts = [];
+      moveCount = 0;
+      resetBoard();
+      score = 0;
+      hand = [null, null, null];
+      removePendingGhost();
+      fillHand();
+      advanceMystery();
+      updateScore();
+      drawTray();
+      draw();
+      document.getElementById('gameOverModal').classList.add('hidden');
+      checkGameOver();
+    }
+
+    function renderSettings() {
+      document.querySelectorAll('input[name="diff"]').forEach(el => { el.checked = el.value === difficulty; });
+      document.getElementById('mysteryToggle').checked = profiles[difficulty].mystery;
+      const sliderWrap = document.getElementById('mysterySliderWrap');
+      const slider = document.getElementById('mysteryChance');
+      if (difficulty === 'easy') {
+        sliderWrap.classList.add('show');
+        slider.value = profiles.easy.mysteryChance;
+        document.getElementById('mysteryChanceVal').textContent = profiles.easy.mysteryChance + '%';
+      } else {
+        sliderWrap.classList.remove('show');
+      }
+      const container = document.getElementById('pieceToggles');
+      container.innerHTML = '';
+      allPieces.forEach(p => {
+        const wrap = document.createElement('label');
+        wrap.className = 'piece-toggle';
+        const check = document.createElement('input');
+        check.type = 'checkbox';
+        check.checked = p.enabled;
+        check.addEventListener('change', () => {
+          const keys = profiles[difficulty].enabledKeys;
+          if (check.checked) {
+            if (!keys.includes(p.key)) keys.push(p.key);
+          } else {
+            const k = keys.indexOf(p.key);
+            if (k !== -1) keys.splice(k, 1);
+          }
+          if (keys.length === 0) {
+            keys.push(p.key);
+            check.checked = true;
+            alert('At least one piece must be enabled.');
+          }
+          applyProfile(difficulty);
+          saveProfiles();
+        });
+        const cvs = document.createElement('canvas');
+        cvs.width = 72; cvs.height = 72;
+        drawPieceOnCtx(cvs.getContext('2d'), p, 72, 72, 4);
+        const span = document.createElement('span');
+        span.textContent = p.baseName;
+        wrap.appendChild(check);
+        wrap.appendChild(cvs);
+        wrap.appendChild(span);
+        container.appendChild(wrap);
+      });
+      renderSettingsScores();
+    }
+
+    document.getElementById('newGameBtn').addEventListener('click', () => { vibrate(25); newGame(); });
+    document.getElementById('restartBtn').addEventListener('click', () => { vibrate(25); newGame(); });
+    document.getElementById('settingsBtn').addEventListener('click', () => {
+      renderSettings();
+      document.getElementById('settingsModal').classList.remove('hidden');
+    });
+    document.getElementById('closeSettings').addEventListener('click', () => {
+      document.getElementById('settingsModal').classList.add('hidden');
+      saveProfiles();
+      drawTray();
+    });
+    document.querySelectorAll('input[name="diff"]').forEach(el => {
+      el.addEventListener('change', () => {
+        if (el.checked) {
+          difficulty = el.value;
+          applyProfile(difficulty);
+          renderSettings();
+          saveProfiles();
+        }
+      });
+    });
+    document.getElementById('mysteryToggle').addEventListener('change', e => {
+      profiles[difficulty].mystery = e.target.checked;
+      saveProfiles();
+    });
+    document.getElementById('mysteryChance').addEventListener('input', e => {
+      profiles.easy.mysteryChance = parseInt(e.target.value, 10);
+      document.getElementById('mysteryChanceVal').textContent = e.target.value + '%';
+      saveProfiles();
+    });
+
+    /* === Splash === */
+    function hideSplash() {
+      const splash = document.getElementById('splash');
+      splash.classList.add('hidden');
+      setTimeout(() => splash.remove(), 800);
+    }
+
+    function init() {
+      try {
+        loadProfiles();
+        loadScores();
+        renderSplashScores();
+        const diffInput = document.querySelector(`input[name="diff"][value="${difficulty}"]`);
+        if (diffInput) diffInput.checked = true;
+        window.addEventListener('resize', resize);
+        resize();
+        newGame();
+      } catch (err) {
+        console.error('Init error', err);
+      }
+      setTimeout(hideSplash, 900);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  </script>
+</body>
+</html>
