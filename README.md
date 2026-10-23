@@ -63,9 +63,15 @@ Made for fun. No external assets are used.
 - There is no audio; feedback uses short haptic taps.
 - The game serves from one HTML file, a Web App Manifest, and a Service Worker for offline play.
 
-### Color palettes
+### Styles
 
-The Options screen lets you pick a color palette for all in-game blocks and the stylized "GAME OVER!" title. The default palette is **Neon**, with extra palettes including **Candy**, **Christmas**, and **Halloween**.
+The Options screen lets you pick a visual **style** that changes the look of every block *and* the mystery emojis.
+
+- **Cartoon** (default) — bright, sharp, Minecraft-like blocks with bevels and inner pixel highlights. General emojis.
+- **Halloween** — rounded, glowing blocks in orange, purple, and black. Only Halloween-themed mystery emojis appear (pumpkins, ghosts, bats, spiders, coffins, etc.).
+- **Christmas** — rounded gift-style blocks with white snow caps and red/green/gold colors. Only festive mystery emojis appear (trees, presents, reindeer, Santa, snowmen, etc.).
+
+The style also recolors the splash logo, score glow, and the stylized "GAME OVER!" title.
 
 ### Easy mode
 
@@ -75,7 +81,7 @@ The Options screen lets you pick a color palette for all in-game blocks and the 
 - **Mystery emoji:** a positive mystery emoji can appear on the board. Drag it onto any block to blow up all connected blocks of the same color for **30 points each**.
 - **Mystery merge:** drag a mystery emoji onto another mystery emoji to trigger a cross explosion. You score **120 points** plus **50 points** for every cell destroyed in the cross.
 - **Skip piece:** triple-tap a slot to discard its current piece and draw another. Costs **10 points**.
-- **Mystery spawn:** controlled by a slider in Options (1%–100% per move). Default is 80%.
+- **Mystery spawn:** controlled by a slider in Options (1%–100% per move). Default is 80%. When a spawn roll succeeds, Easy keeps adding mysteries until it reaches the configured max or the board runs out of empty cells.
 - **Max mysteries:** in Options you can allow up to **32** mystery emojis on the board at once (half the board). Default is 3.
 - Life spans: each mystery lasts **3 moves** before it disappears and respawns.
 
@@ -97,4 +103,4 @@ The Options screen lets you pick a color palette for all in-game blocks and the 
 
 ### Modes quick-switch
 
-The active mode is shown as a small label directly under the score. Swipe up or down on the score to move Easy → Medium → Hard. A small pulse on the label confirms the change.
+The active mode is shown in plain tiny text directly under the score. Swipe up or down on the score to move Easy → Medium → Hard. A small pulse on the label confirms the change.
