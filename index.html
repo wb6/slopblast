@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Slop Blast">
   <meta name="theme-color" content="#0b0d17">
-  <title>Slop Blast Offline</title>
+  <title>Slop Blast</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon.svg">
   <link rel="icon" type="image/svg+xml" href="icon.svg">
@@ -82,7 +82,14 @@
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
     }
-    .top-left { display: flex; align-items: center; gap: 10px; }
+    .top-left {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 2px;
+      min-height: 42px;
+    }
     #scoreWrap {
       font-family: ui-monospace, SFMono-Regular, 'Courier New', Courier, monospace;
       font-variant-numeric: tabular-nums;
@@ -90,29 +97,38 @@
       font-weight: 900;
       color: #fff;
       letter-spacing: 2px;
-      text-shadow: 0 -1px 0 #aef5ff, 0 1px 0 #000, 0 0 8px rgba(126,231,255,0.85), 0 0 16px rgba(126,231,255,0.5);
+      text-shadow: 0 -1px 0 var(--accent), 0 1px 0 #000, 0 0 8px var(--accent), 0 0 16px var(--accent);
+      line-height: 1;
+    }
+    #scoreWrap.swipe-area {
+      cursor: ns-resize;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+      padding: 2px 2px 2px 0;
     }
     .mode-label {
-      font-size: 9px;
+      font-size: 7px;
       font-weight: 900;
       text-transform: uppercase;
-      letter-spacing: 1.2px;
+      letter-spacing: 0.8px;
       color: var(--accent);
-      border: 1px solid rgba(126,231,255,0.2);
-      border-radius: 999px;
-      padding: 2px 8px;
-      cursor: pointer;
+      padding: 0;
       user-select: none;
-      transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
-      text-shadow: 0 0 6px rgba(126,231,255,0.35);
-      background: rgba(126,231,255,0.03);
-      box-shadow: 0 0 10px rgba(126,231,255,0.05);
+      transition: transform 0.15s ease;
+      text-shadow: 0 0 5px var(--accent);
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      pointer-events: none;
+      line-height: 1;
+      opacity: 0.9;
     }
-    .mode-label.pulse { transform: scale(1.08); background: rgba(126,231,255,0.12); box-shadow: 0 0 16px rgba(126,231,255,0.2); }
+    .mode-label.pulse { transform: scale(1.08); }
     #topbar .btns { display: flex; gap: 8px; }
     #topbar button {
-      background: rgba(126, 231, 255, 0.12);
-      border: 1px solid rgba(126,231,255,0.35);
+      background: color-mix(in srgb, var(--accent) 12%, transparent);
+      border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
       color: var(--accent);
       border-radius: 8px;
       padding: 7px 12px;
@@ -289,18 +305,14 @@
       line-height: 1.55;
       color: #c2c8dc;
     }
-    .game-over-title {
+    #gameOverTitle {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      height: 72px;
       margin: 0 0 12px;
-      font-size: 44px;
-      font-weight: 900;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      background: linear-gradient(180deg, #ffffff 0%, #7ee7ff 55%, #0072ff 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      text-shadow: 0 2px 18px rgba(126,231,255,0.35);
-      line-height: 1;
+      touch-action: none;
+      user-select: none;
     }
     .score-label {
       font-size: 12px;
@@ -368,6 +380,44 @@
       z-index: 1;
       box-shadow: 0 0 8px currentColor;
     }
+    .palette-picker {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 10px;
+    }
+    .palette-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .palette-btn.selected {
+      border-color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 14%, transparent);
+      color: var(--accent);
+    }
+    .palette-swatch {
+      display: inline-grid;
+      grid-template-columns: repeat(3, 8px);
+      gap: 2px;
+    }
+    .palette-swatch i {
+      display: block;
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      font-style: normal;
+      line-height: 0;
+    }
+
     .difficulty { display: flex; gap: 8px; flex-wrap: wrap; }
     .difficulty label {
       flex: 1 1 auto;
@@ -454,9 +504,9 @@
   <div id="topbar">
     <div class="top-left">
       <div id="scoreWrap"><span id="scoreVal">0</span></div>
+      <div class="mode-label" id="modeLabel" title="Swipe up/down on the score to switch mode">Medium</div>
     </div>
     <div class="btns">
-      <div class="mode-label" id="modeLabel" title="Double-tap or swipe up/down to switch mode">Medium</div>
       <button id="newGameBtn">New Game</button>
       <button id="settingsBtn">Options</button>
     </div>
@@ -493,8 +543,11 @@
         </div>
         <div class="mystery-slider" id="maxMysteriesWrap">
           <span>Max mystery emojis: <b id="maxMysteriesVal">3</b></span>
-          <input type="range" id="maxMysteries" min="1" max="5" value="3">
+          <input type="range" id="maxMysteries" min="1" max="32" value="3">
         </div>
+
+        <h3>Style</h3>
+        <div id="stylePicker" class="palette-picker"></div>
 
         <h3>Available pieces for this mode</h3>
         <div id="pieceToggles"></div>
@@ -510,7 +563,7 @@
 
   <div id="gameOverModal" class="modal hidden">
     <div class="modal-content" style="text-align:center;background:rgba(16,20,36,0.88); position:relative; overflow:visible;">
-      <div class="game-over-title">GAME OVER</div>
+      <canvas id="gameOverTitle"></canvas>
       <p class="score-label">SCORE</p>
       <div class="final-score" id="finalScore">0</div>
       <p class="final-stats" id="finalStats"></p>
@@ -543,10 +596,10 @@ A mobile-first, installable block-blasting puzzle game that works offline.
 
 - Drag pieces from the bottom tray onto the 8×8 grid.
 - Fill a complete row, column, or long diagonal to clear it and score points.
-- **Easy mode**: free line shifting, mystery color bombs, skip pieces, and pushable lines.
+- **Easy mode**: relaxed play with mystery color bombs, skip pieces, pushable lines, and the freedom to let your score go negative.
 - **Medium mode**: line shifting costs points; mystery emojis appear every few moves.
 - **Hard mode**: nuisance emojis block lines and scoring gets tougher.
-- Double-tap the mode pill in the top bar to cycle modes.
+- The current mode appears as a small label under the score. Swipe up or down on the score to switch modes: Easy → Medium → Hard.
 
 ## Controls
 
@@ -558,6 +611,7 @@ A mobile-first, installable block-blasting puzzle game that works offline.
 | Push a row/column (Easy only)        | Press-and-hold grid for 5 s, then swipe |
 | Use mystery color bomb (Easy only)   | Drag the mystery emoji onto a block |
 | Skip a piece (Easy only)             | Triple-tap the piece in the tray (−10 pts) |
+| Switch mode                          | Swipe up/down on the score        |
 | Open options                         | Tap **Options**                   |
 
 ## Offline &amp; install
@@ -594,25 +648,32 @@ Made for fun. No external assets are used.
 - Drag a piece from one of the 3 slots in the bottom tray and drop it onto an empty area on the grid.
 - Pieces cannot be rotated — each rotation exists as its own selectable piece.
 - A line clears when every cell in a **row**, **column**, or either long **diagonal** is filled.
-- Each cleared cell scores **10 points**. The popup counts up as it is added to your total.
+- Each block you place scores **10 points**.
+- Each cleared cell in a line scores **20 points**.
 - There is no audio; feedback uses short haptic taps.
 - The game serves from one HTML file, a Web App Manifest, and a Service Worker for offline play.
+
+### Color palettes
+
+The Options screen lets you pick a color palette for all in-game blocks and the stylized &quot;GAME OVER!&quot; title. The default palette is **Neon**, with extra palettes including **Candy**, **Christmas**, and **Halloween**.
 
 ### Easy mode
 
 - **Goal:** relaxed play. The game never forces a game over.
-- **Line shifting:** press and hold a row/column for about 0.4 s, then swipe left/right or up/down to shift that line. Lines wrap around.
-- **Pushable lines:** press and hold a line for **5 seconds**. The highlight turns orange. Swipe to push all blocks on the line together toward one edge (like a pusher game). No wrapping.
-- **Mystery emoji:** a positive mystery emoji can appear on the board. Drag it onto any block to blow up all connected blocks of the same color for **15 points each**.
-- **Skip piece:** triple-tap a slot to discard its current piece and draw another. Costs **10 points** and your score may go negative.
+- **Line shifting:** press and hold a row/column for about 0.4 s, then swipe left/right or up/down to shift that line. Lines wrap around. Each shift costs **10 points**.
+- **Pushable lines:** press and hold a line for **5 seconds**. The highlight turns orange. Swipe to push all blocks on the line together toward one edge (like a pusher game). No wrapping. Each block you push costs **10 points**.
+- **Mystery emoji:** a positive mystery emoji can appear on the board. Drag it onto any block to blow up all connected blocks of the same color for **30 points each**.
+- **Mystery merge:** drag a mystery emoji onto another mystery emoji to trigger a cross explosion. You score **120 points** plus **50 points** for every cell destroyed in the cross.
+- **Skip piece:** triple-tap a slot to discard its current piece and draw another. Costs **10 points**.
 - **Mystery spawn:** controlled by a slider in Options (1%–100% per move). Default is 80%.
+- **Max mysteries:** in Options you can allow up to **32** mystery emojis on the board at once (half the board). Default is 3.
 - Life spans: each mystery lasts **3 moves** before it disappears and respawns.
 
 ### Medium mode
 
 - **Goal:** balance strategy and pressure.
 - **Line shifting:** costs **100 points** each shift.
-- **Mystery emoji:** a positive reward emoji may appear. Clearing the line that contains it multiplies that clear by 2×–5× (weighted toward lower values).
+- **Mystery emoji:** a positive reward emoji may appear. Clearing the line that contains it adds **100 points** for the mystery and multiplies the whole line clear by **2×–5×** (weighted toward lower values).
 - **Spawn rule:** a new mystery is only rolled on every **3rd move**, with a **20%** chance.
 - **Game over:** when none of the 3 current pieces can legally be placed. Top scores store whether mystery was on or off.
 
@@ -626,7 +687,7 @@ Made for fun. No external assets are used.
 
 ### Modes quick-switch
 
-Double-tap the mode pill in the top-right of the score bar to cycle Easy → Medium → Hard → Easy. A small pulse confirms the change.
+The active mode is shown as a small label directly under the score. Swipe up or down on the score to move Easy → Medium → Hard. A small pulse on the label confirms the change.
 <!--README_CONTENT--></div>
 
   <script>
@@ -648,10 +709,75 @@ Double-tap the mode pill in the top-right of the score bar to cycle Easy → Med
     const N = 8;
     const EXPLOSION_DURATION = 260;
     const POPUP_DURATION = 650;
-    const COLORS = {
-      1: '#00f0f0', 2: '#ffdd00', 3: '#ff9500', 4: '#00dd55',
-      5: '#aa44ff', 6: '#ff2222', 7: '#0055ff', 8: '#ff66cc', 9: '#66ffcc'
+    const STYLES = {
+      cartoon: {
+        name: 'Cartoon',
+        accent: '#7ee7ff',
+        colors: {
+          1: '#00f0f0', 2: '#ffdd00', 3: '#ff9500', 4: '#00dd55',
+          5: '#aa44ff', 6: '#ff2222', 7: '#0055ff', 8: '#ff66cc', 9: '#66ffcc'
+        },
+        gameOverColors: ['#00f0f0','#ffdd00','#ff9500','#00dd55','#aa44ff','#ff2222'],
+        positiveEmojis: ['🎁','⭐','💎','🔥','🍀','⚡','🌈','🦄','🎯','💣'],
+        negativeEmojis: ['😡','💩','🛑','🚫','🤢','👎','🧨','☠️']
+      },
+      halloween: {
+        name: 'Halloween',
+        accent: '#ff7b00',
+        colors: {
+          1: '#ff7b00', 2: '#9d4edd', 3: '#06d6a0', 4: '#2b0a3d',
+          5: '#e85d04', 6: '#5a189a', 7: '#9c6644', 8: '#ffcc00', 9: '#111111'
+        },
+        gameOverColors: ['#ff7b00','#e85d04','#ffcc00','#9d4edd','#5a189a','#06d6a0'],
+        positiveEmojis: ['🎃','👻','🦇','🕸️','🍬','🧙','🧛','🕷️','⚰️','🪦'],
+        negativeEmojis: ['💀','🧟','🕯️','☠️','👹','🧌']
+      },
+      christmas: {
+        name: 'Christmas',
+        accent: '#c1121f',
+        colors: {
+          1: '#c1121f', 2: '#2d6a4f', 3: '#ffffff', 4: '#f4d03f',
+          5: '#1b4332', 6: '#8b0000', 7: '#146b3a', 8: '#ffcc00', 9: '#d4af37'
+        },
+        gameOverColors: ['#c1121f','#2d6a4f','#ffd700','#ffffff','#8b0000','#146b3a'],
+        positiveEmojis: ['🎄','🎁','⭐','🦌','🎅','🕯️','🧑‍🎄','☃️','🍪','🎶'],
+        negativeEmojis: ['🥶','🧊','🌨️','❄️','🐻‍❄️']
+      }
     };
+    let style = 'cartoon';
+    let COLORS = STYLES[style].colors;
+
+    function applyStyle() {
+      const s = STYLES[style];
+      COLORS = s.colors;
+      document.documentElement.style.setProperty('--accent', s.accent);
+      const logo = document.querySelector('.logo');
+      if (logo) {
+        const spans = logo.querySelectorAll('span');
+        const keys = Object.keys(COLORS);
+        spans.forEach((el, i) => { el.style.background = COLORS[keys[i % keys.length]]; });
+      }
+      drawTray();
+      draw();
+      if (!document.getElementById('gameOverModal').classList.contains('hidden')) {
+        const canvas = document.getElementById('gameOverTitle');
+        let colors = null;
+        try { colors = JSON.parse(canvas.dataset.colors || '[]'); } catch (e) {}
+        drawGameOverTitle(colors && colors.length ? colors : null);
+      }
+    }
+    function loadStyle() {
+      try {
+        let raw = localStorage.getItem('slopblast_style');
+        if (!raw) raw = localStorage.getItem('slopblast_palette');
+        if (raw && STYLES[raw]) style = raw;
+      } catch (e) {}
+      applyStyle();
+    }
+    function saveStyle() {
+      try { localStorage.setItem('slopblast_style', style); } catch (e) {}
+    }
+
     const BASES = [
       { name: 'Monomino', id: 1, m: [[1]] },
       { name: 'Domino',   id: 2, m: [[2,2]] },
@@ -663,8 +789,6 @@ Double-tap the mode pill in the top-right of the score bar to cycle Easy → Med
       { name: 'Tet L',    id: 8, m: [[0,0,8],[8,8,8]] },
       { name: 'Tet S',    id: 9, m: [[0,9,9],[9,9,0]] }
     ];
-    const POSITIVE_EMOJIS = ['🎁','⭐','💎','🔥','🍀','⚡','🌈','🦄','🎯','💣'];
-    const NEGATIVE_EMOJIS = ['😡','💩','🛑','🚫','🤢','👎','🧨','☠️'];
     const MYSTERY_LIFESPAN = 3;
 
     /* === State === */
@@ -915,6 +1039,7 @@ Double-tap the mode pill in the top-right of the score bar to cycle Easy → Med
         document.getElementById('finalScore').textContent = score;
         document.getElementById('finalStats').textContent = `Mode: ${difficulty}`;
         document.getElementById('gameOverModal').classList.remove('hidden');
+        drawGameOverTitle();
         saveScore(difficulty, score);
         renderSplashScores();
         vibrate(120);
@@ -955,7 +1080,8 @@ Double-tap the mode pill in the top-right of the score bar to cycle Easy → Med
 
     /* === Mystery === */
     function randomEmoji(nuisance) {
-      const list = nuisance ? NEGATIVE_EMOJIS : POSITIVE_EMOJIS;
+      const src = STYLES[style] || STYLES.cartoon;
+      const list = nuisance ? src.negativeEmojis : src.positiveEmojis;
       return list[Math.floor(Math.random() * list.length)];
     }
     function getMystery(r, c) {
@@ -968,17 +1094,18 @@ Double-tap the mode pill in the top-right of the score bar to cycle Easy → Med
       if (idx !== -1) mysteries.splice(idx, 1);
     }
     function placeMystery(nuisance) {
-      if (!profiles[difficulty].mystery) return;
+      if (!profiles[difficulty].mystery) return false;
       const max = difficulty === 'easy' ? (profiles.easy.maxMysteries || 3) : 1;
-      if (mysteries.length >= max) return;
+      if (mysteries.length >= max) return false;
       const empties = [];
       for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (board[r][c] === 0) empties.push([r, c]);
-      if (empties.length === 0) return;
+      if (empties.length === 0) return false;
       const [r, c] = empties[Math.floor(Math.random() * empties.length)];
       const id = nextMysteryId--;
       const m = { id, r, c, emoji: randomEmoji(nuisance), age: 0, nuisance };
       board[r][c] = id;
       mysteries.push(m);
+      return true;
     }
     function advanceMystery() {
       moveCount++;
@@ -997,7 +1124,9 @@ Double-tap the mode pill in the top-right of the score bar to cycle Easy → Med
           } else {
             chance = 75;
           }
-          if (Math.random() * 100 < chance) placeMystery(difficulty === 'hard');
+          if (Math.random() * 100 < chance) {
+            while (placeMystery(difficulty === 'hard') && mysteries.length < max) {}
+          }
         }
       }
       draw();
@@ -1012,12 +1141,13 @@ Double-tap the mode pill in the top-right of the score bar to cycle Easy → Med
 
     /* === Line shift === */
     function shiftLineCost() {
-      if (difficulty === 'easy') return 0;
+      if (difficulty === 'easy') return 10;
       if (difficulty === 'medium') return 100;
       return Math.max(100, Math.floor(score / 2));
     }
     function canShiftLine() {
-      return difficulty === 'easy' || score >= shiftLineCost();
+      if (difficulty === 'easy') return true;
+      return score >= shiftLineCost();
     }
     function shiftRow(r, dir) {
       if (dir > 0) {
@@ -1062,33 +1192,39 @@ Double-tap the mode pill in the top-right of the score bar to cycle Easy → Med
       if (dir > 0) {
         let end = c;
         while (end + 1 < N && board[r][end + 1] !== 0) end++;
-        if (end + 1 >= N || board[r][end + 1] !== 0) return false;
+        if (end + 1 >= N || board[r][end + 1] !== 0) return 0;
+        const count = end - c + 1;
         for (let cc = end + 1; cc > c; cc--) board[r][cc] = board[r][cc - 1];
         board[r][c] = 0;
+        return count;
       } else {
         let start = c;
         while (start - 1 >= 0 && board[r][start - 1] !== 0) start--;
-        if (start - 1 < 0 || board[r][start - 1] !== 0) return false;
+        if (start - 1 < 0 || board[r][start - 1] !== 0) return 0;
+        const count = c - start + 1;
         for (let cc = start - 1; cc < c; cc++) board[r][cc] = board[r][cc + 1];
         board[r][c] = 0;
+        return count;
       }
-      return true;
     }
     function nudgeGroupCol(r, c, dir) {
       if (dir > 0) {
         let end = r;
         while (end + 1 < N && board[end + 1][c] !== 0) end++;
-        if (end + 1 >= N || board[end + 1][c] !== 0) return false;
+        if (end + 1 >= N || board[end + 1][c] !== 0) return 0;
+        const count = end - r + 1;
         for (let rr = end + 1; rr > r; rr--) board[rr][c] = board[rr - 1][c];
         board[r][c] = 0;
+        return count;
       } else {
         let start = r;
         while (start - 1 >= 0 && board[start - 1][c] !== 0) start--;
-        if (start - 1 < 0 || board[start - 1][c] !== 0) return false;
+        if (start - 1 < 0 || board[start - 1][c] !== 0) return 0;
+        const count = r - start + 1;
         for (let rr = start - 1; rr < r; rr++) board[rr][c] = board[rr + 1][c];
         board[r][c] = 0;
+        return count;
       }
-      return true;
     }
     function nudgeMystery(r, c, dR, dC) {
       const nr = r + dR, nc = c + dC;
@@ -1191,13 +1327,13 @@ Double-tap the mode pill in the top-right of the score bar to cycle Easy → Med
             const add = (rr, cc) => { if (board[rr][cc] !== 0 && !cells.some(p => p[0] === rr && p[1] === cc)) cells.push([rr, cc]); };
             for (let cc = 0; cc < N; cc++) add(r, cc);
             for (let rr = 0; rr < N; rr++) add(rr, c);
-            let points = 0;
+            let points = 120;
             cells.forEach(([cr, cc]) => {
               const v = board[cr][cc];
               board[cr][cc] = 0;
               const color = v < 0 ? '#ffd700' : COLORS[v];
               explosions.push({ x: gridX + cc * cellSize, y: gridY + cr * cellSize, colorId: v, color, start: now });
-              points += 25;
+              points += 50;
             });
             spawnScorePopup(gridX + c * cellSize + cellSize / 2, gridY + r * cellSize + cellSize / 2, points, '✨');
             vibrate(45);
@@ -1207,7 +1343,7 @@ Double-tap the mode pill in the top-right of the score bar to cycle Easy → Med
           } else if (target > 0) {
             const colorId = target;
             const cells = floodFillSameColor(r, c, colorId);
-            const points = cells.length * 15;
+            const points = cells.length * 30;
             const now = performance.now();
             cells.forEach(([cr, cc]) => {
               board[cr][cc] = 0;
@@ -1324,13 +1460,14 @@ Double-tap the mode pill in the top-right of the score bar to cycle Easy → Med
       clearCenterX /= cellsCleared;
       clearCenterY /= cellsCleared;
 
+      const baseLinePoints = cellsCleared * 20;
       if (mysteryCleared) {
         mysteryBursts.push({ x: mysteryCellX, y: mysteryCellY, start: now });
         const multiplier = rollMysteryMultiplier();
-        const points = cellsCleared * 10 * multiplier;
+        const points = (baseLinePoints + 100) * multiplier;
         spawnScorePopup(clearCenterX, clearCenterY, points, `x${multiplier}`);
       } else {
-        spawnScorePopup(clearCenterX, clearCenterY, cellsCleared * 10, null);
+        spawnScorePopup(clearCenterX, clearCenterY, baseLinePoints, null);
       }
 
       startAnimate();
@@ -1388,6 +1525,13 @@ Double-tap the mode pill in the top-right of the score bar to cycle Easy → Med
 
       draw();
       drawTray();
+
+      if (!document.getElementById('gameOverModal').classList.contains('hidden')) {
+        const canvas = document.getElementById('gameOverTitle');
+        let colors = null;
+        try { colors = JSON.parse(canvas.dataset.colors || '[]'); } catch (e) {}
+        drawGameOverTitle(colors && colors.length ? colors : null);
+      }
     }
 
     function drawBlock(ctx, x, y, size, colorId) {
@@ -1551,6 +1695,61 @@ Double-tap the mode pill in the top-right of the score bar to cycle Easy → Med
         gridCtx.stroke();
         gridCtx.restore();
       }
+    }
+
+    function drawGameOverTitle(letterColors = null) {
+      const canvas = document.getElementById('gameOverTitle');
+      if (!canvas) return;
+      const s = STYLES[style];
+      const wrap = canvas.parentElement;
+      const width = wrap ? wrap.clientWidth : window.innerWidth - 32;
+      const height = 72;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.max(1, width * dpr);
+      canvas.height = Math.max(1, height * dpr);
+      canvas.style.width = width + 'px';
+      canvas.style.height = height + 'px';
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, width, height);
+
+      const text = 'GAME OVER!';
+      ctx.save();
+      ctx.font = '900 42px ui-rounded, -apple-system, BlinkMacSystemFont, "Segoe UI", Impact, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      const totalW = ctx.measureText(text).width;
+      const spacing = totalW < width * 0.92 ? 4 : 2;
+      let xCursor = (width - totalW - (text.length - 1) * spacing) / 2;
+      const y = height / 2;
+
+      const colors = letterColors || text.split('').map(() => s.gameOverColors[Math.floor(Math.random() * s.gameOverColors.length)]);
+      canvas.dataset.colors = JSON.stringify(colors);
+
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        const w = ctx.measureText(ch).width;
+        const cx = xCursor + w / 2;
+        const color = colors[i];
+        ctx.save();
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 18;
+        ctx.lineWidth = 7;
+        ctx.strokeStyle = '#102044';
+        ctx.strokeText(ch, cx, y);
+
+        const grad = ctx.createLinearGradient(0, y - 24, 0, y + 24);
+        grad.addColorStop(0, '#ffffff');
+        grad.addColorStop(0.45, shade(color, 30));
+        grad.addColorStop(1, color);
+        ctx.fillStyle = grad;
+        ctx.fillText(ch, cx, y);
+        ctx.restore();
+
+        xCursor += w + spacing;
+      }
+      ctx.restore();
     }
 
     function startAnimate() {
@@ -1833,11 +2032,9 @@ Double-tap the mode pill in the top-right of the score bar to cycle Easy → Med
         vibrate(18);
         draw();
       }, 420);
-      const canPushEventually = difficulty === 'easy' || (difficulty === 'medium' && cell < 0);
+      const canPushEventually = difficulty === 'easy';
       const pushTimer = canPushEventually ? setTimeout(() => {
         if (!lineShift) return;
-        const pushMystery = cell < 0 ? getMystery(lineShift.r, lineShift.c) : null;
-        if (difficulty === 'medium' && (!pushMystery || pushMystery.nuisance)) { lineShift.pushable = false; return; }
         lineShift.pushable = true;
         lineShift.armed = false;
         vibrate([20, 20]);
@@ -1860,25 +2057,19 @@ Double-tap the mode pill in the top-right of the score bar to cycle Easy → Med
         const { r, c } = lineShift;
         if (board[r][c] === 0) return;
         const threshold = cellSize * 0.45;
-        let moved = false;
+        let moved = 0;
         if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > threshold) {
           const dir = dx > 0 ? 1 : -1;
-          if (difficulty === 'medium') {
-            moved = nudgeMystery(r, c, 0, dir);
-          } else {
-            moved = nudgeGroupRow(r, c, dir);
-            if (moved) lineShift.c += dir;
-          }
+          moved = nudgeGroupRow(r, c, dir);
+          if (moved) lineShift.c += dir;
         } else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > threshold) {
           const dir = dy > 0 ? 1 : -1;
-          if (difficulty === 'medium') {
-            moved = nudgeMystery(r, c, dir, 0);
-          } else {
-            moved = nudgeGroupCol(r, c, dir);
-            if (moved) lineShift.r += dir;
-          }
+          moved = nudgeGroupCol(r, c, dir);
+          if (moved) lineShift.r += dir;
         }
         if (moved) {
+          score -= moved * 10;
+          updateScore();
           syncMysteryPositions();
           lineShift.lastPush = now;
           lineShift.startX = e.clientX;
@@ -1905,7 +2096,7 @@ Double-tap the mode pill in the top-right of the score bar to cycle Easy → Med
           cancelLineHold();
           return;
         }
-        if (difficulty !== 'easy') score -= shiftLineCost();
+        score -= shiftLineCost();
         updateScore();
         shiftRow(lineShift.r, dx > 0 ? 1 : -1);
         vibrate(25);
@@ -1920,7 +2111,7 @@ Double-tap the mode pill in the top-right of the score bar to cycle Easy → Med
           cancelLineHold();
           return;
         }
-        if (difficulty !== 'easy') score -= shiftLineCost();
+        score -= shiftLineCost();
         updateScore();
         shiftCol(lineShift.c, dy > 0 ? 1 : -1);
         vibrate(25);
@@ -1995,9 +2186,39 @@ Double-tap the mode pill in the top-right of the score bar to cycle Easy → Med
       setTimeout(() => label.classList.remove('pulse'), 260);
     }
 
+    function renderStylePicker() {
+      const container = document.getElementById('stylePicker');
+      if (!container) return;
+      container.innerHTML = '';
+      Object.keys(STYLES).forEach(key => {
+        const s = STYLES[key];
+        const btn = document.createElement('button');
+        btn.className = 'palette-btn' + (key === style ? ' selected' : '');
+        const swatch = document.createElement('span');
+        swatch.className = 'palette-swatch';
+        Object.keys(s.colors).forEach(id => {
+          const dot = document.createElement('i');
+          dot.style.background = s.colors[id];
+          swatch.appendChild(dot);
+        });
+        btn.appendChild(swatch);
+        const name = document.createElement('span');
+        name.textContent = s.name;
+        btn.appendChild(name);
+        btn.addEventListener('click', () => {
+          style = key;
+          applyStyle();
+          saveStyle();
+          renderStylePicker();
+        });
+        container.appendChild(btn);
+      });
+    }
+
     function renderSettings() {
       syncModeUI();
       document.getElementById('mysteryToggle').checked = profiles[difficulty].mystery;
+      renderStylePicker();
       const sliderWrap = document.getElementById('mysterySliderWrap');
       const slider = document.getElementById('mysteryChance');
       const maxWrap = document.getElementById('maxMysteriesWrap');
@@ -2132,19 +2353,16 @@ Double-tap the mode pill in the top-right of the score bar to cycle Easy → Med
       document.getElementById('aboutModal').classList.add('hidden');
     });
 
-    // Mode label: double-tap cycles forward; swipe up/down cycles through modes
+    // Mode switch: swipe up or down on the score to move Easy -> Medium -> Hard and back
     const modeLabel = document.getElementById('modeLabel');
-    modeLabel.addEventListener('dblclick', cycleMode);
-    let lastTap = 0;
+    const scoreWrap = document.getElementById('scoreWrap');
+    scoreWrap.classList.add('swipe-area');
     let modeSwipeStart = null;
-    modeLabel.addEventListener('pointerdown', e => {
+    scoreWrap.addEventListener('pointerdown', e => {
       modeSwipeStart = { x: e.clientX, y: e.clientY };
-      try { modeLabel.setPointerCapture(e.pointerId); } catch(err) {}
-      const now = performance.now();
-      if (now - lastTap < 300) cycleMode();
-      lastTap = now;
+      try { scoreWrap.setPointerCapture(e.pointerId); } catch(err) {}
     });
-    modeLabel.addEventListener('pointerup', e => {
+    scoreWrap.addEventListener('pointerup', e => {
       if (!modeSwipeStart) return;
       const dx = e.clientX - modeSwipeStart.x;
       const dy = e.clientY - modeSwipeStart.y;
@@ -2174,6 +2392,7 @@ Double-tap the mode pill in the top-right of the score bar to cycle Easy → Med
 
     function init() {
       try {
+        loadStyle();
         loadProfiles();
         loadScores();
         renderSplashScores();
