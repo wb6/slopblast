@@ -51,10 +51,11 @@
     #splash.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
     .logo { display: grid; grid-template-columns: repeat(4, 20px); gap: 7px; margin-bottom: 18px; }
     .logo span { width: 20px; height: 20px; border-radius: 4px; animation: pop 0.85s infinite alternate; box-shadow: inset -2px -2px 0 rgba(0,0,0,0.25), inset 2px 2px 0 rgba(255,255,255,0.25); }
-    .logo span:nth-child(1) { background: #00f0f0; animation-delay: 0s; }
-    .logo span:nth-child(2) { background: #ff9500; animation-delay: 0.1s; }
-    .logo span:nth-child(3) { background: #00dd55; animation-delay: 0.2s; }
-    .logo span:nth-child(4) { background: #ff2222; animation-delay: 0.3s; }
+    .logo span:nth-child(1), .mini-logo span:nth-child(1) { background: #00f0f0; animation-delay: 0s; }
+    .logo span:nth-child(2), .mini-logo span:nth-child(2) { background: #ff9500; animation-delay: 0.1s; }
+    .logo span:nth-child(3), .mini-logo span:nth-child(3) { background: #00dd55; animation-delay: 0.2s; }
+    .logo span:nth-child(4), .mini-logo span:nth-child(4) { background: #ff2222; animation-delay: 0.3s; }
+    .mini-logo span { width: 18px; height: 18px; border-radius: 4px; animation: pop 0.85s infinite alternate; box-shadow: inset -2px -2px 0 rgba(0,0,0,0.25), inset 2px 2px 0 rgba(255,255,255,0.25); }
     #splash h1 { margin: 0; font-size: 34px; letter-spacing: 4px; color: var(--accent); text-shadow: 0 2px 12px rgba(126,231,255,0.35); }
     #splash p { margin: 8px 0 18px; color: var(--muted); font-size: 13px; }
     .splash-scores { width: 100%; max-width: 320px; }
@@ -125,6 +126,12 @@
       opacity: 0.9;
     }
     .mode-label.pulse { transform: scale(1.08); }
+    .move-count {
+      margin-left: 6px;
+      color: #6c7391;
+      text-shadow: none;
+      font-weight: 700;
+    }
     #topbar .btns { display: flex; gap: 8px; }
     #topbar button {
       background: color-mix(in srgb, var(--accent) 12%, transparent);
@@ -154,6 +161,121 @@
       transition: opacity 0.25s ease;
     }
     #toast.show { opacity: 1; }
+
+    .recycle-bin {
+      position: fixed;
+      top: calc(56px + env(safe-area-inset-top) + 6px);
+      right: calc(8px + env(safe-area-inset-right));
+      width: 66px;
+      height: 66px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      line-height: 1;
+      background: rgba(16, 20, 36, 0.95);
+      box-shadow:
+        0 0 24px rgba(126, 231, 255, 0.3),
+        0 4px 24px rgba(0, 0, 0, 0.55),
+        inset 0 0 16px rgba(126, 231, 255, 0.1);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 90;
+      user-select: none;
+      transition: none;
+      -webkit-user-select: none;
+    }
+    .recycle-bin.visible {
+      opacity: 1;
+    }
+
+    .score-effects {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+    #scoreWrap {
+      position: relative;
+      z-index: 1;
+    }
+    .score-digit {
+      display: inline-block;
+      min-width: 0.55em;
+      text-align: center;
+    }
+    @keyframes digitPulse {
+      0% { filter: brightness(1); }
+      50% { filter: brightness(2.3); }
+      100% { filter: brightness(1); }
+    }
+    .score-digit.pulse {
+      animation: digitPulse 0.22s ease;
+    }
+
+    .score-effect {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    @keyframes pixelGridFlash {
+      0% { opacity: 0; }
+      20% { opacity: 0.45; }
+      40% { opacity: 0.12; }
+      60% { opacity: 0.35; }
+      100% { opacity: 0; }
+    }
+    .score-effect.pixel {
+      background-image:
+        linear-gradient(to right, rgba(255,255,255,0.35) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.35) 1px, transparent 1px);
+      background-size: 8px 8px;
+      animation: pixelGridFlash 0.55s ease-out forwards;
+    }
+    @keyframes neonSweep {
+      0% { transform: translateX(-120%); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateX(120%); opacity: 0; }
+    }
+    .score-effect.neon {
+      top: -30%;
+      left: -10%;
+      width: 120%;
+      height: 160%;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      animation: neonSweep 0.7s ease-in-out forwards;
+    }
+    @keyframes sparkPop {
+      0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      100% { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(0); opacity: 0; }
+    }
+    .score-effect.sparks .spark {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      left: 50%;
+      top: 50%;
+      background: #fff;
+      box-shadow: 0 0 6px #fff;
+      animation: sparkPop 0.65s ease-out forwards;
+    }
+    @keyframes crtFlare {
+      0% { opacity: 0; transform: scaleY(0); }
+      20% { opacity: 1; transform: scaleY(1.15); }
+      50% { opacity: 0.95; transform: scaleY(1); }
+      100% { opacity: 0; transform: scaleY(1); }
+    }
+    .score-effect.crt {
+      background:
+        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.18) 2px, rgba(255,255,255,0.18) 4px),
+        radial-gradient(circle at 50% 50%, rgba(126,231,255,0.28), transparent 70%);
+      animation: crtFlare 0.75s ease-out forwards;
+    }
 
     /* Game grid */
     #grid {
@@ -233,6 +355,29 @@
       color: #fff;
       text-shadow: 0 2px 10px rgba(0,0,0,0.55), 0 0 18px rgba(126,231,255,0.6);
       transition: opacity 0.45s ease;
+    }
+    .score-popup.combo {
+      color: #ffd700;
+      text-shadow: 0 0 18px #ffd700, 0 0 8px rgba(255, 140, 0, 0.8);
+    }
+    .heart-pop {
+      position: fixed;
+      pointer-events: none;
+      z-index: 24;
+      font-size: 28px;
+      color: #ff5e8a;
+      text-shadow: 0 0 12px #ff5e8a, 0 0 22px #ff002b;
+      animation: heartFloat 0.9s ease-out forwards;
+    }
+    @keyframes heartFloat {
+      0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0; }
+      20% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+      100% { transform: translate(-50%, -160%) scale(1); opacity: 0; }
+    }
+    @keyframes scorePop {
+      0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+      40% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(1); opacity: 0.9; }
     }
 
     /* Modals */
@@ -503,8 +648,9 @@
 
   <div id="topbar">
     <div class="top-left">
-      <div id="scoreWrap"><span id="scoreVal">0</span></div>
-      <div class="mode-label" id="modeLabel" title="Swipe up/down on the score to switch mode">Medium</div>
+      <div id="scoreEffects" class="score-effects"></div>
+      <div id="scoreWrap"><span class="score-digit">0</span></div>
+      <div class="mode-label" id="modeLabel" title="Swipe up/down on the score to switch mode"><span id="modeLabelText">Medium</span><span class="move-count" id="moveLabel"> · 0</span></div>
     </div>
     <div class="btns">
       <button id="newGameBtn">New Game</button>
@@ -513,6 +659,8 @@
   </div>
 
   <div id="toast"></div>
+
+  <div id="recycleBin" class="recycle-bin" role="button" aria-label="Recycle">🗑️</div>
 
   <canvas id="grid"></canvas>
 
@@ -588,6 +736,17 @@
     </div>
   </div>
 
+  <div id="highScoreSplash" class="modal hidden" style="background:rgba(5,7,14,0.96);">
+    <div class="modal-content splash-modal" style="background:transparent; border:none; box-shadow:none; text-align:center; max-width:360px;">
+      <div class="mini-logo" style="display:grid; grid-template-columns:repeat(4, 18px); gap:6px; margin:0 auto 14px; justify-content:center;">
+        <span></span><span></span><span></span><span></span>
+      </div>
+      <h1 style="margin:0; font-size:32px; letter-spacing:4px; color:var(--accent); text-shadow:0 2px 12px rgba(126,231,255,0.35);">SLOP BLAST</h1>
+      <p style="margin:6px 0 16px; color:var(--muted); font-size:13px;">top scores</p>
+      <div class="splash-scores" id="popupScores"></div>
+    </div>
+  </div>
+
   <div id="aboutContent" class="hidden"><!--README_CONTENT--># Slop Blast
 
 A mobile-first, installable block-blasting puzzle game that works offline.
@@ -610,7 +769,8 @@ A mobile-first, installable block-blasting puzzle game that works offline.
 | Shift a row/column                   | Press-and-hold grid, then swipe |
 | Push a row/column (Easy only)        | Press-and-hold grid for 5 s, then swipe |
 | Use mystery color bomb (Easy only)   | Drag the mystery emoji onto a block |
-| Skip a piece (Easy only)             | Triple-tap the piece in the tray (−10 pts) |
+| Skip a piece (Easy only)             | Double-tap the piece in the tray (−10 pts) |
+| Drop onto a mystery (Easy only)      | Drop the same piece on the same mystery twice to blast it |
 | Switch mode                          | Swipe up/down on the score        |
 | Open options                         | Tap **Options**                   |
 
@@ -670,7 +830,8 @@ The style also recolors the splash logo, score glow, and the stylized &quot;GAME
 - **Pushable lines:** press and hold a line for **5 seconds**. The highlight turns orange. Swipe to push all blocks on the line together toward one edge (like a pusher game). No wrapping. Each block you push costs **10 points**.
 - **Mystery emoji:** a positive mystery emoji can appear on the board. Drag it onto any block to blow up all connected blocks of the same color for **30 points each**.
 - **Mystery merge:** drag a mystery emoji onto another mystery emoji to trigger a cross explosion. You score **120 points** plus **50 points** for every cell destroyed in the cross.
-- **Skip piece:** triple-tap a slot to discard its current piece and draw another. Costs **10 points**.
+- **Skip piece:** double-tap a slot to discard its current piece and draw the next previewed piece. Costs **10 points**.
+- **Drop on mystery:** in Easy you can drop a normal piece onto a positive mystery emoji. Drop the same piece on the same cells a second time to blast the mystery. It scores like a mystery line clear (100 base + 20 per cell, multiplied).
 - **Mystery spawn:** controlled by a slider in Options (1%–100% per move). Default is 80%. When a spawn roll succeeds, Easy keeps adding mysteries until it reaches the configured max or the board runs out of empty cells.
 - **Max mysteries:** in Options you can allow up to **32** mystery emojis on the board at once (half the board). Default is 3.
 - Life spans: each mystery lasts **3 moves** before it disappears and respawns.
@@ -715,6 +876,8 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
     const N = 8;
     const EXPLOSION_DURATION = 260;
     const POPUP_DURATION = 650;
+    const SCORE_POPUP_BASE_SIZE = 23;
+    const PENDING_DROP_BADGE_COLOR = '#7ee7ff';
     const STYLES = {
       cartoon: {
         name: 'Cartoon',
@@ -763,6 +926,12 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
         const keys = Object.keys(COLORS);
         spans.forEach((el, i) => { el.style.background = COLORS[keys[i % keys.length]]; });
       }
+      const miniLogo = document.querySelector('.mini-logo');
+      if (miniLogo) {
+        const spans = miniLogo.querySelectorAll('span');
+        const keys = Object.keys(COLORS);
+        spans.forEach((el, i) => { el.style.background = COLORS[keys[i % keys.length]]; });
+      }
       drawTray();
       draw();
       if (!document.getElementById('gameOverModal').classList.contains('hidden')) {
@@ -796,6 +965,14 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
       { name: 'Tet S',    id: 9, m: [[0,9,9],[9,9,0]] }
     ];
     const MYSTERY_LIFESPAN = 3;
+    const SPAWN_ANIM_DURATION = 380;
+    const STAR_BURST_DURATION = 100;
+
+    function easeOutBack(t) {
+      const c1 = 1.70158;
+      const c3 = c1 + 1;
+      return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+    }
 
     /* === State === */
     const gridCanvas = document.getElementById('grid');
@@ -825,7 +1002,15 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
     let mysteryBursts = [];
     let moveCount = 0;
     let mysteryDrag = null;
+    let pendingMysteryDrops = [];
+    let screenShake = 0;
+    let starBursts = [];
+    let lastRenderedScore = 0;
+    let triggeredMilestones = new Set();
     const slotTapTimes = [[], [], []];
+    let recycleBinEl = null;
+    let recycleState = { active: false, slotIdx: -1, type: null, hoverStart: 0, showAt: 0, timer: null, visible: false };
+    let blockDrag = null;
 
     /* === Piece generation === */
     function rotateMatrix(m) {
@@ -866,7 +1051,7 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
     buildPieces();
 
     ['easy','medium','hard'].forEach(m => {
-      profiles[m] = { enabledKeys: allPieces.map(p => p.key), mystery: true, mysteryChance: 80, maxMysteries: 3 };
+      profiles[m] = { enabledKeys: allPieces.map(p => p.key), mystery: true, mysteryChance: 80, maxMysteries: m === 'easy' ? 3 : 1 };
     });
 
     /* === Profiles / Scores === */
@@ -881,7 +1066,7 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
               profiles[m].enabledKeys = data[m].enabledKeys;
               if (typeof data[m].mystery === 'boolean') profiles[m].mystery = data[m].mystery;
               if (typeof data[m].mysteryChance === 'number') profiles[m].mysteryChance = data[m].mysteryChance;
-              if (m === 'easy' && typeof data[m].maxMysteries === 'number') profiles[m].maxMysteries = data[m].maxMysteries;
+              if (typeof data[m].maxMysteries === 'number') profiles[m].maxMysteries = data[m].maxMysteries;
             }
           });
         }
@@ -905,23 +1090,30 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
       return list;
     }
 
+    const SCORES_KEY = 'slopblast_top_scores';
     function loadScores() {
       try {
-        const raw = localStorage.getItem('slopblast_scores');
+        let raw = localStorage.getItem(SCORES_KEY);
+        const migrated = !raw;
+        if (!raw) raw = localStorage.getItem('slopblast_scores');
         if (raw) {
           const data = JSON.parse(raw);
           ['easy','medium','hard'].forEach(m => {
             if (Array.isArray(data[m])) scores[m] = data[m].slice(0, 3);
           });
+          if (migrated) saveScores();
         }
       } catch(e) {}
     }
+    function saveScores() {
+      try { localStorage.setItem(SCORES_KEY, JSON.stringify(scores)); } catch(e) {}
+    }
     function saveScore(mode, value) {
       if (value <= 0) return;
-      scores[mode].push({ score: value, date: new Date().toISOString(), displayDate: new Date().toLocaleString(), mystery: profiles[mode].mystery });
+      scores[mode].push({ score: value, date: new Date().toISOString(), displayDate: new Date().toLocaleString(), mystery: profiles[mode].mystery, moves: moveCount });
       scores[mode].sort((a, b) => b.score - a.score);
       scores[mode] = scores[mode].slice(0, 3);
-      try { localStorage.setItem('slopblast_scores', JSON.stringify(scores)); } catch(e) {}
+      saveScores();
     }
     function mysteryIcon(on) { return on ? '<span style="color:#ffd700">✨</span>' : '<span style="color:#6c7391">✱</span>'; }
     function formatTopScores(rows) {
@@ -1043,7 +1235,7 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
         cleanupDrag();
         commitPendingScore();
         document.getElementById('finalScore').textContent = score;
-        document.getElementById('finalStats').textContent = `Mode: ${difficulty}`;
+        document.getElementById('finalStats').textContent = `Mode: ${difficulty} · ${moveCount}`;
         document.getElementById('gameOverModal').classList.remove('hidden');
         drawGameOverTitle();
         saveScore(difficulty, score);
@@ -1059,10 +1251,72 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
           if (piece.matrix[y][x] !== 0) {
             const rr = r + y, cc = c + x;
             if (rr < 0 || rr >= N || cc < 0 || cc >= N || board[rr][cc] !== 0) return false;
+            if (pendingDropCovering(rr, cc)) return false;
           }
         }
       }
       return true;
+    }
+
+    function pendingDropCovering(r, c, exclude) {
+      return pendingMysteryDrops.find(p => p !== exclude && p.cells.some(([pr, pc]) => pr === r && pc === c));
+    }
+
+    function isValidPlacementOnMystery(piece, r, c, existing) {
+      for (let y = 0; y < piece.rows; y++) {
+        for (let x = 0; x < piece.cols; x++) {
+          if (piece.matrix[y][x] !== 0) {
+            const rr = r + y, cc = c + x;
+            if (rr < 0 || rr >= N || cc < 0 || cc >= N) return false;
+            const v = board[rr][cc];
+            if (v !== 0) {
+              const m = getMystery(rr, cc);
+              if (!m || m.nuisance) return false;
+            }
+            const other = pendingDropCovering(rr, cc, existing);
+            if (other && other !== existing) return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    function findPendingMysteryDrop(pieceKey, topR, topC) {
+      return pendingMysteryDrops.find(p => p.pieceKey === pieceKey && p.topR === topR && p.topC === topC);
+    }
+
+    function addPendingMysteryDrop(piece, topR, topC) {
+      const cells = [];
+      const mIds = [];
+      for (let y = 0; y < piece.rows; y++) {
+        for (let x = 0; x < piece.cols; x++) {
+          if (piece.matrix[y][x] !== 0) {
+            const rr = topR + y, cc = topC + x;
+            cells.push([rr, cc]);
+            const m = getMystery(rr, cc);
+            if (m && !m.nuisance && !mIds.includes(m.id)) mIds.push(m.id);
+          }
+        }
+      }
+      pendingMysteryDrops.push({
+        pieceKey: piece.key,
+        pieceId: piece.id,
+        rows: piece.rows,
+        cols: piece.cols,
+        matrix: piece.matrix.map(row => row.slice()),
+        topR, topC, cells, mIds
+      });
+    }
+
+    function removePendingMysteryDrop(p) {
+      const idx = pendingMysteryDrops.indexOf(p);
+      if (idx !== -1) pendingMysteryDrops.splice(idx, 1);
+    }
+
+    function cleanupPendingMysteryDrops() {
+      pendingMysteryDrops = pendingMysteryDrops.filter(p => {
+        return p.mIds.some(id => mysteries.some(m => m.id === id));
+      });
     }
 
     function placePiece(piece, r, c, slotIdx) {
@@ -1075,6 +1329,7 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
           }
         }
       }
+      pendingMysteryDrops = []; // clear any unrelated ghost outline on a new drop
       score += placed * 10;
       vibrate(30);
       clearLines();
@@ -1082,6 +1337,68 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
       updateScore();
       afterPlace(slotIdx);
       startAnimate();
+    }
+
+    function handleMysteryDrop(piece, topR, topC, slotIdx) {
+      const existing = findPendingMysteryDrop(piece.key, topR, topC);
+      if (existing) {
+        // Second identical drop: destroy the mystery and commit the piece.
+        const mList = existing.mIds.map(id => mysteries.find(m => m.id === id)).filter(Boolean);
+        removePendingMysteryDrop(existing);
+
+        const now = performance.now();
+        mList.forEach(m => {
+          const cx = gridX + m.c * cellSize + cellSize / 2;
+          const cy = gridY + m.r * cellSize + cellSize / 2;
+          board[m.r][m.c] = 0;
+          removeMystery(m);
+          spawnMegaExplosion(cx, cy, '#ffd700', 22);
+        });
+
+        let points = 0;
+        mList.forEach(m => {
+          const cx = gridX + m.c * cellSize + cellSize / 2;
+          const cy = gridY + m.r * cellSize + cellSize / 2;
+          const multiplier = rollMysteryMultiplier();
+          const pts = (20 + 100) * multiplier;
+          points += pts;
+          spawnScorePopup(cx, cy, pts, `x${multiplier}`);
+        });
+
+        screenShake = Math.max(screenShake, 8 + mList.length * 5);
+        vibrate([30, 30, 40]);
+
+        placePiece(piece, topR, topC, slotIdx);
+        animateMagnetDrop();
+        removePendingGhost();
+        draw();
+        startAnimate();
+      } else {
+        // First drop: leave a locked "one more needed" ghost over the mystery.
+        addPendingMysteryDrop(piece, topR, topC);
+        removePendingGhost();
+
+        const ghost = drag.ghost;
+        const g = drag.ghostCellSize;
+        if (ghost && ghost.animate) {
+          const rect = ghost.getBoundingClientRect();
+          const targetX = gridX + topC * cellSize;
+          const targetY = gridY + topR * cellSize;
+          const dx = targetX - rect.left;
+          const dy = targetY - rect.top;
+          const sx = cellSize / g;
+          try {
+            ghost.animate([
+              { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+              { transform: `translate(${dx}px, ${dy}px) scale(${sx})`, opacity: 0.5 }
+            ], { duration: 240, easing: 'ease-out', fill: 'forwards' });
+          } catch (e) {}
+        }
+        setTimeout(() => { if (ghost) ghost.remove(); }, 260);
+        drag = null;
+        draw();
+        startAnimate();
+      }
     }
 
     /* === Mystery === */
@@ -1099,29 +1416,75 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
       const idx = mysteries.indexOf(m);
       if (idx !== -1) mysteries.splice(idx, 1);
     }
+    function removeMysteryWithStar(m) {
+      if (!m) return;
+      starBursts.push({
+        x: gridX + m.c * cellSize + cellSize / 2,
+        y: gridY + m.r * cellSize + cellSize / 2,
+        start: performance.now(),
+        color: m.nuisance ? '#ff4d6d' : '#fff6a8'
+      });
+      removeMystery(m);
+    }
+    function wouldCompleteLine(r, c) {
+      let rowFull = true;
+      for (let cc = 0; cc < N; cc++) if (cc !== c && board[r][cc] === 0) { rowFull = false; break; }
+      let colFull = true;
+      for (let rr = 0; rr < N; rr++) if (rr !== r && board[rr][c] === 0) { colFull = false; break; }
+      let d1Full = false;
+      if (r === c) {
+        d1Full = true;
+        for (let i = 0; i < N; i++) if (i !== c && board[i][i] === 0) { d1Full = false; break; }
+      }
+      let d2Full = false;
+      if (r + c === N - 1) {
+        d2Full = true;
+        for (let i = 0; i < N; i++) if (i !== c && board[i][N - 1 - i] === 0) { d2Full = false; break; }
+      }
+      return rowFull || colFull || d1Full || d2Full;
+    }
+    function mysteryCapForMove(count) {
+      if (count <= 2) return 0;
+      if (count <= 12) return 1;
+      return 1 + Math.ceil((count - 12) / 15);
+    }
+    function effectiveMaxMysteries() {
+      const preset = typeof profiles[difficulty].maxMysteries === 'number'
+        ? profiles[difficulty].maxMysteries
+        : (difficulty === 'easy' ? 3 : 1);
+      return Math.min(preset, mysteryCapForMove(moveCount));
+    }
     function placeMystery(nuisance) {
       if (!profiles[difficulty].mystery) return false;
-      const max = difficulty === 'easy' ? (profiles.easy.maxMysteries || 3) : 1;
-      if (mysteries.length >= max) return false;
+      const cap = effectiveMaxMysteries();
+      if (mysteries.length >= cap || cap <= 0) return false;
       const empties = [];
-      for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (board[r][c] === 0) empties.push([r, c]);
+      for (let r = 0; r < N; r++) {
+        for (let c = 0; c < N; c++) {
+          if (board[r][c] === 0 && !wouldCompleteLine(r, c)) empties.push([r, c]);
+        }
+      }
       if (empties.length === 0) return false;
       const [r, c] = empties[Math.floor(Math.random() * empties.length)];
       const id = nextMysteryId--;
-      const m = { id, r, c, emoji: randomEmoji(nuisance), age: 0, nuisance };
+      const m = {
+        id, r, c, emoji: randomEmoji(nuisance), age: 0, nuisance, spawnTime: performance.now(),
+        animOffset: Math.random() * 2400
+      };
       board[r][c] = id;
       mysteries.push(m);
       return true;
     }
     function advanceMystery() {
       moveCount++;
+      updateMoveCount();
       for (let i = mysteries.length - 1; i >= 0; i--) {
         mysteries[i].age++;
-        if (mysteries[i].age >= MYSTERY_LIFESPAN) removeMystery(mysteries[i]);
+        if (mysteries[i].age >= MYSTERY_LIFESPAN) removeMysteryWithStar(mysteries[i]);
       }
       if (profiles[difficulty].mystery) {
-        const max = difficulty === 'easy' ? (profiles.easy.maxMysteries || 3) : 1;
-        if (mysteries.length < max) {
+        const cap = effectiveMaxMysteries();
+        if (mysteries.length < cap) {
           let chance = 0;
           if (difficulty === 'easy') {
             chance = profiles.easy.mysteryChance;
@@ -1130,11 +1493,14 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
           } else {
             chance = 75;
           }
-          if (Math.random() * 100 < chance) {
-            while (placeMystery(difficulty === 'hard') && mysteries.length < max) {}
+          for (let i = mysteries.length; i < cap; i++) {
+            if (Math.random() * 100 < chance) {
+              if (!placeMystery(difficulty === 'hard')) break;
+            }
           }
         }
       }
+      startAnimate();
       draw();
     }
     function rollMysteryMultiplier() {
@@ -1193,6 +1559,60 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
       for (let i = mysteries.length - 1; i >= 0; i--) {
         if (!found.has(mysteries[i].id)) mysteries.splice(i, 1);
       }
+    }
+    function wholeBoardShiftCost() {
+      if (difficulty === 'easy') return 10;
+      if (difficulty === 'medium') return 40;
+      return shiftLineCost();
+    }
+    function canWholeBoardShift() {
+      if (difficulty === 'easy') return true;
+      return score >= wholeBoardShiftCost();
+    }
+    function shiftAllRows(dir) {
+      for (let r = 0; r < N; r++) {
+        if (dir > 0) {
+          const last = board[r][N - 1];
+          for (let c = N - 1; c > 0; c--) board[r][c] = board[r][c - 1];
+          board[r][0] = last;
+        } else {
+          const first = board[r][0];
+          for (let c = 0; c < N - 1; c++) board[r][c] = board[r][c + 1];
+          board[r][N - 1] = first;
+        }
+      }
+      syncMysteryPositions();
+    }
+    function shiftAllCols(dir) {
+      for (let c = 0; c < N; c++) {
+        if (dir > 0) {
+          const last = board[N - 1][c];
+          for (let r = N - 1; r > 0; r--) board[r][c] = board[r - 1][c];
+          board[0][c] = last;
+        } else {
+          const first = board[0][c];
+          for (let r = 0; r < N - 1; r++) board[r][c] = board[r + 1][c];
+          board[N - 1][c] = first;
+        }
+      }
+      syncMysteryPositions();
+    }
+    function performWholeBoardShift(dirX, dirY) {
+      if (!canWholeBoardShift()) {
+        showToast(`Need ${wholeBoardShiftCost()} points to shift board`);
+        cancelLineHold();
+        return;
+      }
+      score -= wholeBoardShiftCost();
+      updateScore();
+      if (dirX !== 0) shiftAllRows(dirX);
+      if (dirY !== 0) shiftAllCols(dirY);
+      pendingMysteryDrops = [];
+      vibrate(35);
+      clearLines();
+      advanceMystery();
+      if (lineShift) lineShift.shifted = true;
+      startAnimate();
     }
     function nudgeGroupRow(r, c, dir) {
       if (dir > 0) {
@@ -1270,6 +1690,7 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
       return cells;
     }
     function startMysteryDrag(x, y, id) {
+      hideRecycleBin();
       const m = mysteries.find(x => x.id === id);
       if (!m) return;
       const ghost = document.createElement('div');
@@ -1291,6 +1712,7 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
       if (!mysteryDrag) return;
       mysteryDrag.ghost.style.left = (x - 23) + 'px';
       mysteryDrag.ghost.style.top = (y - 23) + 'px';
+      checkRecycleHover(x, y, -1, 'mystery', mysteryDrag.ghost);
     }
     function restoreDraggedMystery() {
       if (!mysteryDrag) return;
@@ -1303,6 +1725,24 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
     }
     function endMysteryDrag(x, y) {
       if (!mysteryDrag) return;
+      if (recycleState.active && performance.now() >= recycleState.showAt && (isOverBin(x, y) || ghostOverlapsBin(mysteryDrag.ghost))) {
+        const m = mysteries.find(x => x.id === mysteryDrag.id);
+        if (m) {
+          removeMystery(m);
+          const ghost = mysteryDrag.ghost;
+          mysteryDrag = null;
+          score += 10 - recycleCost();
+          if (score < 0 && difficulty !== 'easy') score = 0;
+          clearLines();
+          advanceMystery();
+          updateScore();
+          draw();
+          startAnimate();
+          vibrate([25, 35]);
+          animateBlackHole(ghost);
+        }
+        return;
+      }
       const rect = gridCanvas.getBoundingClientRect();
       const c = Math.floor((x - rect.left - gridX) / cellSize);
       const r = Math.floor((y - rect.top - gridY) / cellSize);
@@ -1337,11 +1777,11 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
             cells.forEach(([cr, cc]) => {
               const v = board[cr][cc];
               board[cr][cc] = 0;
-              const color = v < 0 ? '#ffd700' : COLORS[v];
-              explosions.push({ x: gridX + cc * cellSize, y: gridY + cr * cellSize, colorId: v, color, start: now });
+              spawnLineExplosion(cr, cc, v, 1.6);
               points += 50;
             });
             spawnScorePopup(gridX + c * cellSize + cellSize / 2, gridY + r * cellSize + cellSize / 2, points, '✨');
+            screenShake = Math.max(screenShake, 8);
             vibrate(45);
             clearLines();
             advanceMystery();
@@ -1350,13 +1790,13 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
             const colorId = target;
             const cells = floodFillSameColor(r, c, colorId);
             const points = cells.length * 30;
-            const now = performance.now();
             cells.forEach(([cr, cc]) => {
               board[cr][cc] = 0;
-              explosions.push({ x: gridX + cc * cellSize, y: gridY + cr * cellSize, colorId, start: now });
+              spawnLineExplosion(cr, cc, colorId, 1.2);
             });
             removeMystery(m);
             spawnScorePopup(gridX + c * cellSize + cellSize / 2, gridY + r * cellSize + cellSize / 2, points, null);
+            screenShake = Math.max(screenShake, 5);
             vibrate(35);
             clearLines();
             advanceMystery();
@@ -1370,6 +1810,7 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
       }
       mysteryDrag.ghost.remove();
       mysteryDrag = null;
+      hideRecycleBin();
       draw();
       startAnimate();
     }
@@ -1379,7 +1820,222 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
         mysteryDrag.ghost.remove();
         mysteryDrag = null;
       }
+      hideRecycleBin();
       draw();
+    }
+
+    /* === Easy million-point single-square pickup === */
+    function startBlockDrag(clientX, clientY, r, c) {
+      if (difficulty !== 'easy' || score <= 1000000) return;
+      const colorId = board[r][c];
+      if (colorId <= 0) return;
+      hideRecycleBin();
+      board[r][c] = 0;
+      const size = Math.max(46, cellSize);
+      const ghost = document.createElement('div');
+      ghost.className = 'drag-ghost';
+      ghost.style.width = size + 'px';
+      ghost.style.height = size + 'px';
+      const cell = document.createElement('div');
+      cell.className = 'gcell';
+      cell.style.width = size + 'px';
+      cell.style.height = size + 'px';
+      cell.style.left = '0';
+      cell.style.top = '0';
+      cell.style.background = COLORS[colorId];
+      ghost.appendChild(cell);
+      document.body.appendChild(ghost);
+      blockDrag = { ghost, originR: r, originC: c, colorId, value: 10 };
+      moveBlockDrag(clientX, clientY);
+      vibrate(15);
+    }
+    function moveBlockDrag(clientX, clientY) {
+      if (!blockDrag) return;
+      const size = parseInt(blockDrag.ghost.style.width, 10);
+      blockDrag.ghost.style.left = (clientX - size / 2) + 'px';
+      blockDrag.ghost.style.top = (clientY - size / 2) + 'px';
+      checkRecycleHover(clientX, clientY, -1, 'block', blockDrag.ghost);
+    }
+    function restoreDraggedBlock() {
+      if (!blockDrag) return;
+      board[blockDrag.originR][blockDrag.originC] = blockDrag.colorId;
+      blockDrag.ghost.remove();
+      blockDrag = null;
+      hideRecycleBin();
+      draw();
+    }
+    function recycleDraggedBlock() {
+      if (!blockDrag) return;
+      const ghost = blockDrag.ghost;
+      score += blockDrag.value;
+      blockDrag = null;
+      clearLines();
+      advanceMystery();
+      updateScore();
+      draw();
+      startAnimate();
+      vibrate([25, 35]);
+      animateBlackHole(ghost);
+    }
+    function endBlockDrag(clientX, clientY) {
+      if (!blockDrag) return;
+      if (recycleState.active && performance.now() >= recycleState.showAt && (isOverBin(clientX, clientY) || ghostOverlapsBin(blockDrag.ghost))) {
+        recycleDraggedBlock();
+        hideRecycleBin();
+        return;
+      }
+      restoreDraggedBlock();
+      hideRecycleBin();
+    }
+
+    /* === Recycle bin === */
+    function recycleCost() {
+      if (difficulty === 'easy') return 0;
+      return 100000;
+    }
+    function canRecycle() {
+      const cost = recycleCost();
+      if (cost === 0) return true;
+      return score >= cost;
+    }
+    function isOverBin(clientX, clientY) {
+      if (!recycleBinEl) return false;
+      const r = recycleBinEl.getBoundingClientRect();
+      return clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom;
+    }
+    function ghostOverlapsBin(ghostEl) {
+      if (!ghostEl || !recycleBinEl) return false;
+      const a = ghostEl.getBoundingClientRect();
+      const b = recycleBinEl.getBoundingClientRect();
+      return !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
+    }
+    function isOverOrOverlappingBin(clientX, clientY, ghostEl) {
+      return isOverBin(clientX, clientY) || ghostOverlapsBin(ghostEl);
+    }
+    function animateBlackHole(ghost, callback) {
+      if (!ghost) { popOutRecycleBin(callback); return; }
+      const binRect = recycleBinEl ? recycleBinEl.getBoundingClientRect() : ghost.getBoundingClientRect();
+      const dr = ghost.getBoundingClientRect();
+      const dx = binRect.left + binRect.width / 2 - dr.left - dr.width / 2;
+      const dy = binRect.top + binRect.height / 2 - dr.top - dr.height / 2;
+      ghost.style.zIndex = '120';
+      if (ghost.animate) {
+        ghost.animate([
+          { transform: 'translate(0, 0) scale(1) rotate(0deg)', filter: 'brightness(1) grayscale(0)', opacity: 1 },
+          { transform: `translate(${dx * 0.6}px, ${dy * 0.6}px) scale(0.55) rotate(240deg)`, filter: 'brightness(0.4) grayscale(0.9)', opacity: 0.6, offset: 0.65 },
+          { transform: `translate(${dx}px, ${dy}px) scale(0) rotate(720deg)`, filter: 'brightness(0) grayscale(1)', opacity: 0 }
+        ], { duration: 500, easing: 'cubic-bezier(0.55, 0, 1, 1)', fill: 'forwards' });
+        setTimeout(() => { ghost.remove(); popOutRecycleBin(callback); }, 520);
+      } else {
+        ghost.remove();
+        popOutRecycleBin(callback);
+      }
+    }
+    function cancelBinAnimations() {
+      if (!recycleBinEl) return;
+      recycleBinEl.getAnimations().forEach(a => a.cancel());
+      recycleBinEl.style.transform = '';
+      recycleBinEl.style.opacity = '';
+    }
+    function popOutRecycleBin(callback) {
+      if (!recycleBinEl || !recycleState.visible) {
+        if (recycleBinEl) {
+          recycleBinEl.classList.remove('visible');
+          cancelBinAnimations();
+        }
+        recycleState.visible = false;
+        if (callback) callback();
+        return;
+      }
+      cancelBinAnimations();
+      recycleBinEl.animate([
+        { transform: 'scale(1)', opacity: 1 },
+        { transform: 'scale(1.1)', opacity: 1, offset: 1 / 3, easing: 'ease-in' },
+        { transform: 'scale(0)', opacity: 0, offset: 1, easing: 'cubic-bezier(0.55, 0.085, 0.68, 0.53)' }
+      ], { duration: 250, fill: 'forwards' });
+      setTimeout(() => {
+        if (recycleBinEl) {
+          recycleBinEl.classList.remove('visible');
+          recycleBinEl.style.transform = '';
+          recycleBinEl.style.opacity = '';
+        }
+        recycleState = { active: false, slotIdx: -1, type: null, hoverStart: 0, showAt: 0, timer: null, visible: false };
+        if (callback) callback();
+      }, 260);
+    }
+    function showRecycleBin() {
+      if (!recycleBinEl) return;
+      cancelBinAnimations();
+      recycleBinEl.classList.add('visible');
+      recycleState.visible = true;
+      try {
+        recycleBinEl.animate([
+          { transform: 'scale(0.2)', opacity: 0 },
+          { transform: 'scale(1.08)', opacity: 1, offset: 0.7 },
+          { transform: 'scale(1)', opacity: 1 }
+        ], { duration: 280, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)', fill: 'forwards' });
+      } catch (e) {}
+      if (recycleState.type === 'mystery' && mysteryDrag && mysteryDrag.ghost) {
+        mysteryDrag.ghost.style.filter = 'grayscale(1)';
+      }
+    }
+    function hideRecycleBin() {
+      if (recycleState.timer) { clearTimeout(recycleState.timer); recycleState.timer = null; }
+      if (recycleBinEl) {
+        cancelBinAnimations();
+        recycleBinEl.classList.remove('visible');
+      }
+      recycleState = { active: false, slotIdx: -1, type: null, hoverStart: 0, showAt: 0, visible: false };
+      if (mysteryDrag && mysteryDrag.ghost) mysteryDrag.ghost.style.filter = '';
+      if (blockDrag && blockDrag.ghost) blockDrag.ghost.style.filter = '';
+    }
+    function checkRecycleHover(clientX, clientY, slotIdx, type, ghostEl) {
+      if (!recycleBinEl) return;
+      if (!isOverOrOverlappingBin(clientX, clientY, ghostEl)) { hideRecycleBin(); return; }
+      if (!canRecycle()) { hideRecycleBin(); return; }
+      if (recycleState.active && recycleState.slotIdx === slotIdx && recycleState.type === type) return;
+
+      hideRecycleBin();
+      const now = performance.now();
+      recycleState = { active: true, slotIdx, type, hoverStart: now, showAt: now + 250, visible: false, timer: null };
+      recycleState.timer = setTimeout(() => {
+        if (recycleState.active && recycleState.slotIdx === slotIdx && recycleState.type === type) {
+          showRecycleBin();
+        }
+      }, 250);
+    }
+    function countPieceCells(piece) {
+      let cells = 0;
+      for (let y = 0; y < piece.rows; y++) {
+        for (let x = 0; x < piece.cols; x++) {
+          if (piece.matrix[y][x] !== 0) cells++;
+        }
+      }
+      return cells;
+    }
+    function recycleDraggedPiece() {
+      if (!drag) return;
+      const slotIdx = drag.slotIdx;
+      const piece = drag.piece;
+      const cells = countPieceCells(piece);
+      const cost = recycleCost();
+      const value = cells * 10;
+      const ghost = drag.ghost;
+
+      slots[slotIdx].classList.remove('dragging');
+      drag = null;
+      removePendingGhost();
+
+      score += value - cost;
+      hand[slotIdx] = randomPiece();
+      drawTray();
+      clearLines();
+      advanceMystery();
+      updateScore();
+      draw();
+      startAnimate();
+      vibrate([20, 30]);
+      animateBlackHole(ghost);
     }
 
     /* === Toast === */
@@ -1402,12 +2058,76 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
       });
     }
 
+    function spawnLineExplosion(rr, cc, colorId, intensity = 1) {
+      const cx = gridX + cc * cellSize + cellSize / 2;
+      const cy = gridY + rr * cellSize + cellSize / 2;
+      const color = colorId > 0 ? COLORS[colorId] : (colorId < 0 ? '#ffd700' : '#7ee7ff');
+      const count = Math.floor(2 + intensity * 2.5);
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = (0.4 + Math.random() * 1.3) * cellSize * 0.25 * intensity;
+        explosions.push({
+          x: cx, y: cy,
+          color,
+          start: performance.now(),
+          duration: 420 + Math.random() * 280 * intensity,
+          size: cellSize * (0.22 + Math.random() * 0.28),
+          grow: 0.5 + Math.random() * 0.8,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          gravity: cellSize * 0.035,
+          alpha: 0.9 + Math.random() * 0.1,
+          rotation: Math.random() * Math.PI,
+          spin: (Math.random() - 0.5) * 0.18,
+          type: Math.random() > 0.45 ? 'rect' : 'circle'
+        });
+      }
+    }
+
+    function spawnMegaExplosion(cx, cy, color, intensity = 1) {
+      const count = Math.floor(10 + intensity * 8);
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = (0.6 + Math.random() * 2.2) * cellSize * 0.28 * intensity;
+        explosions.push({
+          x: cx, y: cy,
+          color,
+          start: performance.now(),
+          duration: 520 + Math.random() * 340 * intensity,
+          size: cellSize * (0.25 + Math.random() * 0.35),
+          grow: 0.9 + Math.random() * 1.1,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          gravity: cellSize * 0.05,
+          alpha: 1,
+          rotation: Math.random() * Math.PI,
+          spin: (Math.random() - 0.5) * 0.3,
+          type: Math.random() > 0.4 ? 'rect' : 'circle'
+        });
+      }
+      mysteryBursts.push({ x: cx, y: cy, start: performance.now(), big: true });
+    }
+
+    function spawnShockwave(cx, cy, color, scale = 1) {
+      explosions.push({
+        x: cx, y: cy,
+        color,
+        type: 'ring',
+        start: performance.now(),
+        duration: 520,
+        maxR: cellSize * scale
+      });
+    }
+
     function clearLines() {
+      const rows = new Set(), cols = new Set();
+      let diag1 = false, diag2 = false;
       const toClear = new Set();
 
       // rows
       for (let r = 0; r < N; r++) {
         if (board[r].every(v => v !== 0) && !lineHasNuisance(r, 0, 'row')) {
+          rows.add(r);
           for (let c = 0; c < N; c++) toClear.add(`${r},${c}`);
         }
       }
@@ -1416,6 +2136,7 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
         let full = true;
         for (let r = 0; r < N; r++) if (board[r][c] === 0) { full = false; break; }
         if (full && !lineHasNuisance(0, c, 'col')) {
+          cols.add(c);
           for (let r = 0; r < N; r++) toClear.add(`${r},${c}`);
         }
       }
@@ -1423,17 +2144,21 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
       let d1 = true;
       for (let i = 0; i < N; i++) if (board[i][i] === 0) { d1 = false; break; }
       if (d1 && !lineHasNuisance(0, 0, 'diag1')) {
+        diag1 = true;
         for (let i = 0; i < N; i++) toClear.add(`${i},${i}`);
       }
       // anti diagonal
       let d2 = true;
       for (let i = 0; i < N; i++) if (board[i][N - 1 - i] === 0) { d2 = false; break; }
       if (d2 && !lineHasNuisance(0, N - 1, 'diag2')) {
+        diag2 = true;
         for (let i = 0; i < N; i++) toClear.add(`${i},${N - 1 - i}`);
       }
 
       if (toClear.size === 0) return;
 
+      const lineCount = rows.size + cols.size + (diag1 ? 1 : 0) + (diag2 ? 1 : 0);
+      const intensity = 1 + (lineCount - 1) * 0.7;
       const now = performance.now();
       let mysteryCleared = false;
       let mysteryCellX = 0, mysteryCellY = 0;
@@ -1453,9 +2178,7 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
         cellsCleared++;
         const colorId = board[rr][cc];
         board[rr][cc] = 0;
-        if (colorId > 0) {
-          explosions.push({ x: gridX + cc * cellSize, y: gridY + rr * cellSize, colorId, start: now });
-        }
+        spawnLineExplosion(rr, cc, colorId, intensity);
       });
 
       // remove cleared mysteries
@@ -1466,6 +2189,11 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
       clearCenterX /= cellsCleared;
       clearCenterY /= cellsCleared;
 
+      if (lineCount > 1) {
+        spawnShockwave(clearCenterX, clearCenterY, '#7ee7ff', 2 + lineCount * 0.8);
+        screenShake = Math.max(screenShake, lineCount * 5);
+      }
+
       const baseLinePoints = cellsCleared * 20;
       if (mysteryCleared) {
         mysteryBursts.push({ x: mysteryCellX, y: mysteryCellY, start: now });
@@ -1473,9 +2201,10 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
         const points = (baseLinePoints + 100) * multiplier;
         spawnScorePopup(clearCenterX, clearCenterY, points, `x${multiplier}`);
       } else {
-        spawnScorePopup(clearCenterX, clearCenterY, baseLinePoints, null);
+        spawnScorePopup(clearCenterX, clearCenterY, baseLinePoints, lineCount > 1 ? `COMBO x${lineCount}` : null);
       }
 
+      vibrate(lineCount > 2 ? [25, 25, 35] : lineCount > 1 ? [20, 20] : 25);
       startAnimate();
     }
 
@@ -1484,9 +2213,26 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
       el.className = 'score-popup';
       el.style.left = x + 'px';
       el.style.top = y + 'px';
+      const size = SCORE_POPUP_BASE_SIZE + Math.min(40, Math.floor(value / 12));
+      el.style.fontSize = size + 'px';
+      if (value >= 300 || label && label.startsWith('COMBO')) el.classList.add('combo');
       el.textContent = '+' + value;
       document.body.appendChild(el);
       scorePopups.push({ el, x, y, value, current: 0, start: performance.now(), label });
+    }
+
+    function spawnHeartPopup(x, y, count = 1) {
+      for (let i = 0; i < count; i++) {
+        const el = document.createElement('div');
+        el.className = 'heart-pop';
+        el.textContent = '💖';
+        const spread = (Math.random() - 0.5) * 70;
+        el.style.left = (x + spread) + 'px';
+        el.style.top = y + 'px';
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 950);
+      }
+      vibrate(10);
     }
 
     function updateScorePopups() {
@@ -1497,12 +2243,15 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
         const target = Math.round(t * p.value);
         const delta = target - p.current;
         if (delta > 0) {
+          const before = score;
           score += delta;
           p.current = target;
           updateScore();
+          const hearts = Math.floor(score / 100) - Math.floor(before / 100);
+          if (hearts > 0) spawnHeartPopup(p.x, p.y, hearts);
         }
         p.el.textContent = (p.label ? p.label + ' ' : '') + '+' + p.current;
-        p.el.style.transform = `translateY(${-28 * t}px)`;
+        p.el.style.transform = `translateY(${-28 * t}px) scale(${1 + Math.min(0.5, p.current / 800)})`;
         p.el.style.opacity = t < 0.7 ? 1 : 1 - (t - 0.7) / 0.3;
 
         if (t >= 1) {
@@ -1513,7 +2262,75 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
     }
 
     function updateScore() {
-      document.getElementById('scoreVal').textContent = score;
+      const container = document.getElementById('scoreWrap');
+      const s = String(score);
+      const old = String(lastRenderedScore);
+      const maxLen = Math.max(s.length, old.length);
+      for (let i = 0; i < maxLen; i++) {
+        const newCh = s[s.length - 1 - i] || '';
+        if (i < container.children.length) {
+          const span = container.children[container.children.length - 1 - i];
+          if (span.textContent !== newCh) {
+            span.textContent = newCh;
+            pulseScoreDigit(span);
+          }
+        } else {
+          const span = document.createElement('span');
+          span.className = 'score-digit';
+          span.textContent = newCh;
+          container.insertBefore(span, container.firstChild);
+          pulseScoreDigit(span);
+        }
+      }
+      while (container.children.length > s.length) container.firstChild.remove();
+      checkScoreMilestones(lastRenderedScore, score);
+      lastRenderedScore = score;
+    }
+    function pulseScoreDigit(span) {
+      span.classList.remove('pulse');
+      void span.offsetWidth;
+      span.classList.add('pulse');
+      setTimeout(() => span.classList.remove('pulse'), 230);
+    }
+    function checkScoreMilestones(oldScore, newScore) {
+      if (newScore <= oldScore) return;
+      const milestones = [
+        { value: 10000, type: 'pixel' },
+        { value: 50000, type: 'neon' },
+        { value: 100000, type: 'sparks' },
+        { value: 500000, type: 'crt' }
+      ];
+      milestones.forEach(m => {
+        if (oldScore < m.value && newScore >= m.value && !triggeredMilestones.has(m.value)) {
+          triggeredMilestones.add(m.value);
+          launchScoreEffect(m.type);
+        }
+      });
+    }
+    function launchScoreEffect(type) {
+      const fx = document.getElementById('scoreEffects');
+      if (!fx) return;
+      const el = document.createElement('div');
+      el.className = 'score-effect ' + type;
+      if (type === 'sparks') {
+        for (let i = 0; i < 24; i++) {
+          const spark = document.createElement('div');
+          spark.className = 'spark';
+          const angle = Math.random() * Math.PI * 2;
+          const dist = 40 + Math.random() * 70;
+          spark.style.setProperty('--tx', Math.cos(angle) * dist + 'px');
+          spark.style.setProperty('--ty', Math.sin(angle) * dist + 'px');
+          el.appendChild(spark);
+        }
+      }
+      fx.appendChild(el);
+      setTimeout(() => el.remove(), 900);
+    }
+    function resetScoreEffects() {
+      const fx = document.getElementById('scoreEffects');
+      if (fx) fx.innerHTML = '';
+      triggeredMilestones.clear();
+      lastRenderedScore = 0;
     }
 
     /* === Drawing === */
@@ -1666,30 +2483,84 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
       }
     }
 
+    function easeInOutQuad(t) {
+      return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    }
+    function mysteryLoopPose(m, now) {
+      const LOOP = 2400;
+      const elapsed = ((now + (m.animOffset || 0)) % LOOP + LOOP) % LOOP;
+      const t = elapsed / LOOP;
+      const keyframes = [
+        { t: 0.00, bob: 0.00, tilt: 0.000, sx: 1.00, sy: 1.00 },
+        { t: 0.25, bob: -0.03, tilt: 0.035, sx: 0.98, sy: 1.02 }, // top
+        { t: 0.50, bob: 0.00, tilt: 0.000, sx: 1.00, sy: 1.00 },
+        { t: 0.75, bob: 0.03, tilt: -0.035, sx: 1.03, sy: 0.97 }, // bottom
+        { t: 1.00, bob: 0.00, tilt: 0.000, sx: 1.00, sy: 1.00 }
+      ];
+      let i = 0;
+      while (i < keyframes.length - 2 && t >= keyframes[i + 1].t) i++;
+      const a = keyframes[i];
+      const b = keyframes[i + 1];
+      const span = b.t - a.t;
+      const local = span === 0 ? 0 : Math.min(1, (t - a.t) / span);
+      const e = easeInOutQuad(local);
+      const lerp = (p, q) => p + (q - p) * e;
+      return {
+        bob: lerp(a.bob, b.bob) * cellSize,
+        tilt: lerp(a.tilt, b.tilt),
+        sx: lerp(a.sx, b.sx),
+        sy: lerp(a.sy, b.sy)
+      };
+    }
     function drawMysteryAt(id, x, y) {
       const m = mysteries.find(x => x.id === id);
       if (!m) return;
-      const pulse = 0.6 + 0.4 * Math.sin(performance.now() / 180);
+
+      const now = performance.now();
+      const spawnT = Math.min(1, (now - (m.spawnTime || 0)) / SPAWN_ANIM_DURATION);
+      const ageLevel = Math.min(m.age, 2);
+
+      // grow on each move tick: same size -> fill the square -> slight overfill
+      const ageScales = [1.1, 1.32, 1.562];
+      const grow = spawnT < 1 ? easeOutBack(spawnT) : 1;
+      const ageScale = ageScales[ageLevel];
+      const pose = mysteryLoopPose(m, now);
+
+      // light outline that pulsates on a 2 second cycle
+      const glowBlur = cellSize * (0.16 + ageLevel * 0.22 + (m.nuisance ? 0.1 : 0));
+      const pulse = 0.65 + 0.35 * Math.sin((now / 1000) * Math.PI);
+
       gridCtx.save();
-      if (m.nuisance) {
-        gridCtx.fillStyle = `rgba(255, 40, 60, ${0.15 + 0.12 * pulse})`;
-        gridCtx.shadowColor = '#ff283c';
-      } else {
-        gridCtx.fillStyle = `rgba(255, 215, 0, ${0.14 + 0.12 * pulse})`;
-        gridCtx.shadowColor = 'gold';
-      }
-      gridCtx.fillRect(x - 3, y - 3, cellSize + 6, cellSize + 6);
-      gridCtx.shadowBlur = 14 * pulse;
-      gridCtx.font = `bold ${Math.floor(cellSize * 0.6)}px serif`;
+      // anchor around the center of the cell so scaling doesn't drift upward
+      gridCtx.translate(x + cellSize / 2, y + cellSize / 2 + pose.bob);
+      gridCtx.rotate(pose.tilt);
+      const styleEmojiScale = style === 'halloween' ? 1.6 : 1;
+      gridCtx.scale(grow * ageScale * pose.sx * styleEmojiScale, grow * ageScale * pose.sy * styleEmojiScale);
+
+      gridCtx.font = `bold ${Math.floor(cellSize * 0.62)}px serif`;
       gridCtx.textAlign = 'center';
       gridCtx.textBaseline = 'middle';
-      gridCtx.fillText(m.emoji, x + cellSize / 2, y + cellSize / 2 + 2);
+      gridCtx.shadowColor = m.nuisance ? '#ff4d6d' : '#ffd200';
+      gridCtx.shadowBlur = glowBlur * pulse;
+      gridCtx.fillText(m.emoji, 0, 0);
+
       gridCtx.restore();
     }
 
     function drawLineShiftHighlight() {
       if (!lineShift) return;
-      const { r, c, armed, mode, pushable } = lineShift;
+      const { r, c, armed, mode, pushable, wholeBoard } = lineShift;
+      if (wholeBoard && armed) {
+        gridCtx.save();
+        const alpha = 0.35 + 0.25 * Math.sin(performance.now() / 120);
+        gridCtx.strokeStyle = `rgba(126, 231, 255, ${alpha + 0.3})`;
+        gridCtx.lineWidth = 3;
+        gridCtx.setLineDash([8, 8]);
+        gridCtx.strokeRect(gridX, gridY, N * cellSize, N * cellSize);
+        gridCtx.setLineDash([]);
+        gridCtx.restore();
+        return;
+      }
       let alpha = armed && !pushable ? 0.35 + 0.25 * Math.sin(performance.now() / 120) : 0.35;
       if (pushable) alpha = 0.45 + 0.25 * Math.sin(performance.now() / 180);
       gridCtx.save();
@@ -1707,6 +2578,7 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
 
     function draw() {
       if (!board || board.length === 0) return;
+      cleanupPendingMysteryDrops();
       const rect = gridCanvas.getBoundingClientRect();
       gridCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
       gridCtx.clearRect(0, 0, rect.width, rect.height);
@@ -1755,28 +2627,74 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
         gridCtx.globalAlpha = 1;
       }
 
+      drawPendingMysteryDrops();
       drawLineShiftHighlight();
       drawExplosions();
       drawMysteryBursts();
+      drawStarBursts();
+    }
+
+    function drawPendingMysteryDrops() {
+      if (difficulty !== 'easy' || pendingMysteryDrops.length === 0) return;
+      gridCtx.save();
+      gridCtx.globalAlpha = 0.16;
+      pendingMysteryDrops.forEach(p => {
+        for (let y = 0; y < p.rows; y++) {
+          for (let x = 0; x < p.cols; x++) {
+            if (p.matrix[y][x] !== 0) {
+              const r = p.topR + y, c = p.topC + x;
+              drawBlock(gridCtx, gridX + c * cellSize, gridY + r * cellSize, cellSize, p.pieceId);
+            }
+          }
+        }
+      });
+      gridCtx.restore();
     }
 
     function drawExplosions() {
       const now = performance.now();
       for (let i = explosions.length - 1; i >= 0; i--) {
         const p = explosions[i];
-        const t = Math.min(1, (now - p.start) / EXPLOSION_DURATION);
+        const t = Math.min(1, (now - p.start) / (p.duration || EXPLOSION_DURATION));
         if (t >= 1) { explosions.splice(i, 1); continue; }
-        const alpha = 1 - t;
-        const size = cellSize * (1 + t * 0.7);
-        const cx = p.x + cellSize / 2;
-        const cy = p.y + cellSize / 2;
+        const alpha = (p.alpha || 1) * (1 - t);
+
+        if (p.vx !== undefined) p.x += p.vx;
+        if (p.vy !== undefined) p.y += p.vy;
+        if (p.gravity) p.vy += p.gravity;
+
         gridCtx.save();
         gridCtx.globalAlpha = alpha;
         const color = p.color || COLORS[p.colorId] || '#7ee7ff';
+
+        if (p.type === 'ring') {
+          const r = (p.maxR || cellSize) * (0.2 + t * 0.8);
+          gridCtx.strokeStyle = color;
+          gridCtx.lineWidth = Math.max(2, (1 - t) * 7);
+          gridCtx.shadowColor = color;
+          gridCtx.shadowBlur = 18 * alpha;
+          gridCtx.beginPath();
+          gridCtx.arc(p.x, p.y, r, 0, Math.PI * 2);
+          gridCtx.stroke();
+          gridCtx.restore();
+          continue;
+        }
+
+        const startSize = p.size || cellSize;
+        const size = startSize * (1 + t * (p.grow || 0.7));
+
         gridCtx.fillStyle = color;
         gridCtx.shadowColor = color;
         gridCtx.shadowBlur = 14 * alpha;
-        gridCtx.fillRect(cx - size / 2, cy - size / 2, size, size);
+        if (p.type === 'circle') {
+          gridCtx.beginPath();
+          gridCtx.arc(p.x, p.y, size / 2, 0, Math.PI * 2);
+          gridCtx.fill();
+        } else {
+          gridCtx.translate(p.x, p.y);
+          if (p.rotation !== undefined) gridCtx.rotate(p.rotation + t * (p.spin || 0));
+          gridCtx.fillRect(-size / 2, -size / 2, size, size);
+        }
         gridCtx.restore();
       }
     }
@@ -1789,11 +2707,41 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
         if (t >= 1) { mysteryBursts.splice(i, 1); continue; }
         gridCtx.save();
         gridCtx.globalAlpha = 1 - t;
-        gridCtx.strokeStyle = '#ffd700';
-        gridCtx.lineWidth = 4 * (1 - t * 0.5);
+        gridCtx.strokeStyle = b.big ? '#ff7b00' : '#ffd700';
+        gridCtx.lineWidth = b.big ? 6 * (1 - t * 0.5) : 4 * (1 - t * 0.5);
+        gridCtx.shadowColor = b.big ? '#ff7b00' : '#ffd700';
+        gridCtx.shadowBlur = b.big ? 28 : 14;
         gridCtx.beginPath();
-        gridCtx.arc(b.x, b.y, cellSize * (0.4 + t * 1.6), 0, Math.PI * 2);
+        gridCtx.arc(b.x, b.y, cellSize * (0.4 + t * (b.big ? 2.4 : 1.6)), 0, Math.PI * 2);
         gridCtx.stroke();
+        gridCtx.restore();
+      }
+    }
+
+    function drawStarBursts() {
+      const now = performance.now();
+      for (let i = starBursts.length - 1; i >= 0; i--) {
+        const b = starBursts[i];
+        const t = Math.min(1, (now - b.start) / STAR_BURST_DURATION);
+        if (t >= 1) { starBursts.splice(i, 1); continue; }
+        const alpha = 1 - t;
+        const outer = cellSize * (0.25 + t * 1.35);
+        const inner = outer * 0.48;
+        gridCtx.save();
+        gridCtx.translate(b.x, b.y);
+        gridCtx.rotate(t * Math.PI);
+        gridCtx.globalAlpha = alpha;
+        gridCtx.fillStyle = b.color;
+        gridCtx.shadowColor = b.color;
+        gridCtx.shadowBlur = 18 + t * 14;
+        gridCtx.beginPath();
+        for (let k = 0; k < 10; k++) {
+          const angle = k * Math.PI / 5 - Math.PI / 2;
+          const r = k % 2 === 0 ? outer : inner;
+          gridCtx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
+        }
+        gridCtx.closePath();
+        gridCtx.fill();
         gridCtx.restore();
       }
     }
@@ -1859,7 +2807,17 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
     function animate() {
       draw();
       updateScorePopups();
-      if (explosions.length || scorePopups.length || mysteryBursts.length) {
+      if (screenShake > 0) {
+        const angle = Math.random() * Math.PI * 2;
+        const d = Math.random() * screenShake;
+        gridCanvas.style.transform = `translate(${Math.cos(angle) * d}px, ${Math.sin(angle) * d}px)`;
+        screenShake *= 0.88;
+        if (screenShake < 0.6) { screenShake = 0; gridCanvas.style.transform = ''; }
+      } else {
+        gridCanvas.style.transform = '';
+      }
+      const activeSpawnAnim = mysteries.some(m => performance.now() - m.spawnTime < SPAWN_ANIM_DURATION + 40);
+      if (explosions.length || scorePopups.length || mysteryBursts.length || starBursts.length || screenShake > 0 || activeSpawnAnim || mysteries.length > 0) {
         animFrame = requestAnimationFrame(animate);
       } else {
         animFrame = null;
@@ -1897,7 +2855,8 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
     }
 
     /* === Drag & Drop === */
-    function startDrag(piece, slotIdx, clientX, clientY) {
+    function startDrag(piece, slotIdx, clientX, clientY, pointerType) {
+      hideRecycleBin();
       slots[slotIdx].classList.add('dragging');
       const slot = slots[slotIdx];
       const rect = slot.getBoundingClientRect();
@@ -1928,6 +2887,14 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
       }
 
       const ghostCellSize = Math.max(cellSize, 58);
+      const isTouch = pointerType === 'touch';
+      let liftX = isTouch ? -Math.round(cellSize * 0.45) : 0;
+      const liftY = isTouch ? -Math.round(cellSize * 0.75) : 0;
+      // When the touch is on the right side of the screen, nudge the piece back right
+      // so it is easier to drop in the rightmost columns.
+      if (isTouch && clientX > window.innerWidth * 0.65) {
+        liftX += Math.round(cellSize * 0.35);
+      }
       const ghost = document.createElement('div');
       ghost.className = 'drag-ghost';
       ghost.style.width = (piece.cols * ghostCellSize) + 'px';
@@ -1947,7 +2914,7 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
         }
       }
       document.body.appendChild(ghost);
-      drag = { piece, slotIdx, offsetCol, offsetRow, ghost, ghostCellSize };
+      drag = { piece, slotIdx, offsetCol, offsetRow, ghost, ghostCellSize, liftX, liftY };
       moveDrag(clientX, clientY);
 
       if (difficulty === 'easy') {
@@ -1973,22 +2940,44 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
     function moveDrag(clientX, clientY) {
       if (!drag) return;
       const g = drag.ghostCellSize;
-      drag.ghost.style.left = (clientX - drag.offsetCol * g) + 'px';
-      drag.ghost.style.top = (clientY - drag.offsetRow * g) + 'px';
+      const lx = (drag.liftX || 0);
+      const ly = (drag.liftY || 0);
+      drag.ghost.style.left = (clientX - drag.offsetCol * g + lx) + 'px';
+      drag.ghost.style.top = (clientY - drag.offsetRow * g + ly) + 'px';
 
       const rect = gridCanvas.getBoundingClientRect();
-      const localX = clientX - rect.left - gridX;
-      const localY = clientY - rect.top - gridY;
+      const localX = clientX - rect.left - gridX + lx;
+      const localY = clientY - rect.top - gridY + ly;
       drag.targetC = Math.round(localX / cellSize) - drag.offsetCol;
       drag.targetR = Math.round(localY / cellSize) - drag.offsetRow;
-      drag.valid = isValidPlacement(drag.piece, drag.targetR, drag.targetC);
+
+      const normal = isValidPlacement(drag.piece, drag.targetR, drag.targetC);
+      if (normal) {
+        drag.valid = true;
+      } else if (difficulty === 'easy') {
+        const existing = findPendingMysteryDrop(drag.piece.key, drag.targetR, drag.targetC);
+        drag.valid = isValidPlacementOnMystery(drag.piece, drag.targetR, drag.targetC, existing) ? 'mystery' : false;
+      } else {
+        drag.valid = false;
+      }
+      checkRecycleHover(clientX, clientY, drag.slotIdx, 'piece', drag.ghost);
       draw();
     }
 
     function endDrag(clientX, clientY) {
       if (!drag) return;
+      if (recycleState.active && performance.now() >= recycleState.showAt && (isOverBin(clientX, clientY) || ghostOverlapsBin(drag.ghost))) {
+        recycleDraggedPiece();
+        return;
+      }
       const slotIdx = drag.slotIdx;
       slots[slotIdx].classList.remove('dragging');
+
+      if (drag.valid === 'mystery') {
+        handleMysteryDrop(drag.piece, drag.targetR, drag.targetC, slotIdx);
+        hideRecycleBin();
+        return;
+      }
 
       if (drag.valid) {
         placePiece(drag.piece, drag.targetR, drag.targetC, slotIdx);
@@ -1999,6 +2988,7 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
         removePendingGhost();
         animateReturn();
       }
+      hideRecycleBin();
     }
 
     function animateMagnetDrop() {
@@ -2054,6 +3044,17 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
       drag = null;
     }
 
+    function skipSlot(idx) {
+      const replacement = (pendingSlot === idx && pendingNextPiece) ? pendingNextPiece : randomPiece();
+      removePendingGhost();
+      score -= 10;
+      updateScore();
+      hand[idx] = replacement;
+      drawTray();
+      draw();
+      vibrate(20);
+    }
+
     slots.forEach(slot => {
       slot.addEventListener('pointerdown', e => {
         const idx = parseInt(slot.dataset.idx, 10);
@@ -2062,26 +3063,24 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
 
         if (difficulty === 'easy') {
           const now = performance.now();
-          slotTapTimes[idx] = slotTapTimes[idx].filter(t => now - t < 550);
+          slotTapTimes[idx] = slotTapTimes[idx].filter(t => now - t < 400);
           slotTapTimes[idx].push(now);
-          if (slotTapTimes[idx].length >= 3) {
+          if (slotTapTimes[idx].length >= 2) {
             slotTapTimes[idx] = [];
-            score -= 10;
-            updateScore();
-            hand[idx] = null;
-            removePendingGhost();
-            afterPlace(idx);
-            drawTray();
-            draw();
-            vibrate(20);
             e.preventDefault();
+            if (drag) {
+              slots[drag.slotIdx].classList.remove('dragging');
+              if (drag.ghost) drag.ghost.remove();
+              drag = null;
+            }
+            skipSlot(idx);
             return;
           }
         }
 
         if (drag || lineShift) return;
         e.preventDefault();
-        startDrag(piece, idx, e.clientX, e.clientY);
+        startDrag(piece, idx, e.clientX, e.clientY, e.pointerType);
         slot.setPointerCapture(e.pointerId);
       });
       slot.addEventListener('pointermove', e => {
@@ -2096,6 +3095,7 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
         try { slot.releasePointerCapture(e.pointerId); } catch(err) {}
       });
       slot.addEventListener('pointercancel', () => {
+        hideRecycleBin();
         if (drag) {
           slots[drag.slotIdx].classList.remove('dragging');
           drag.ghost.remove();
@@ -2108,7 +3108,7 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
 
     /* === Grid line shift & easy mystery drag === */
     gridCanvas.addEventListener('pointerdown', e => {
-      if (drag || mysteryDrag || lineShift) return;
+      if (drag || mysteryDrag || lineShift || blockDrag) return;
       const rect = gridCanvas.getBoundingClientRect();
       const x = e.clientX - rect.left - gridX;
       const y = e.clientY - rect.top - gridY;
@@ -2127,13 +3127,21 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
         }
       }
 
+      // Easy + over 1,000,000 points: pick up any single board square for recycling
+      if (difficulty === 'easy' && score > 1000000 && cell > 0) {
+        startBlockDrag(e.clientX, e.clientY, r, c);
+        try { gridCanvas.setPointerCapture(e.pointerId); } catch(err) {}
+        return;
+      }
+
+      const isEmpty = cell === 0;
       const holdTimer = setTimeout(() => {
         if (!lineShift) return;
         lineShift.armed = true;
         vibrate(18);
         draw();
       }, 420);
-      const canPushEventually = difficulty === 'easy';
+      const canPushEventually = difficulty === 'easy' && !isEmpty;
       const pushTimer = canPushEventually ? setTimeout(() => {
         if (!lineShift) return;
         lineShift.pushable = true;
@@ -2141,11 +3149,12 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
         vibrate([20, 20]);
         draw();
       }, 5000) : null;
-      lineShift = { r, c, startX: e.clientX, startY: e.clientY, armed: false, shifted: false, pushable: false, mode: null, holdTimer, pushTimer, lastPush: 0 };
+      lineShift = { r, c, startX: e.clientX, startY: e.clientY, armed: false, shifted: false, pushable: false, wholeBoard: isEmpty, mode: null, holdTimer, pushTimer, lastPush: 0 };
       try { gridCanvas.setPointerCapture(e.pointerId); } catch(err) {}
     });
 
     gridCanvas.addEventListener('pointermove', e => {
+      if (blockDrag) { moveBlockDrag(e.clientX, e.clientY); return; }
       if (mysteryDrag) { moveMysteryDrag(e.clientX, e.clientY); return; }
       if (!lineShift) return;
 
@@ -2172,6 +3181,7 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
           score -= moved * 10;
           updateScore();
           syncMysteryPositions();
+          pendingMysteryDrops = [];
           lineShift.lastPush = now;
           lineShift.startX = e.clientX;
           lineShift.startY = e.clientY;
@@ -2184,6 +3194,16 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
       }
 
       if (lineShift.shifted) return;
+
+      if (lineShift.wholeBoard && lineShift.armed) {
+        const threshold = cellSize * 0.55;
+        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > threshold) {
+          performWholeBoardShift(dx > 0 ? 1 : -1, 0);
+        } else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > threshold) {
+          performWholeBoardShift(0, dy > 0 ? 1 : -1);
+        }
+        return;
+      }
 
       if (!lineShift.armed) {
         if (Math.hypot(dx, dy) > 14) cancelLineHold();
@@ -2200,6 +3220,7 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
         score -= shiftLineCost();
         updateScore();
         shiftRow(lineShift.r, dx > 0 ? 1 : -1);
+        pendingMysteryDrops = [];
         vibrate(25);
         clearLines();
         advanceMystery();
@@ -2215,6 +3236,7 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
         score -= shiftLineCost();
         updateScore();
         shiftCol(lineShift.c, dy > 0 ? 1 : -1);
+        pendingMysteryDrops = [];
         vibrate(25);
         clearLines();
         advanceMystery();
@@ -2225,6 +3247,10 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
     });
 
     function endGridPointer(e) {
+      if (blockDrag) {
+        endBlockDrag(e.clientX, e.clientY);
+        return;
+      }
       if (mysteryDrag) {
         endMysteryDrag(e.clientX, e.clientY);
         return;
@@ -2241,11 +3267,16 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
       cleanupDrag();
       resetBoard();
       cancelLineHold();
+      resetScoreEffects();
       explosions = [];
       scorePopups.forEach(p => p.el.remove());
       scorePopups = [];
       mysteryBursts = [];
+      pendingMysteryDrops = [];
       moveCount = 0;
+      updateMoveCount();
+      screenShake = 0;
+      starBursts = [];
       if (mysteryDrag && mysteryDrag.ghost) mysteryDrag.ghost.remove();
       mysteryDrag = null;
       score = 0;
@@ -2261,20 +3292,33 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
     }
 
     function syncModeUI() {
-      document.getElementById('modeLabel').textContent = difficulty;
+      document.getElementById('modeLabelText').textContent = difficulty;
+      updateMoveCount();
       const diffInput = document.querySelector(`input[name="diff"][value="${difficulty}"]`);
       if (diffInput) diffInput.checked = true;
+    }
+    function updateMoveCount() {
+      document.getElementById('moveLabel').textContent = ' · ' + moveCount;
     }
 
     function setMode(mode) {
       if (mode === difficulty) return;
+      const order = ['easy', 'medium', 'hard'];
+      const isUp = order.indexOf(mode) > order.indexOf(difficulty);
       difficulty = mode;
       applyProfile(mode);
-      if (difficulty === 'hard') { score = 0; updateScore(); }
-      hand = hand.map(p => p ? randomPiece() : null);
-      if (!hand.some(Boolean)) fillHand();
-      drawTray();
-      draw();
+      pendingMysteryDrops = [];
+      screenShake = 0;
+      starBursts = [];
+      if (isUp) {
+        newGame();
+      } else {
+        if (difficulty === 'hard') { resetScoreEffects(); score = 0; updateScore(); }
+        hand = hand.map(p => p ? randomPiece() : null);
+        if (!hand.some(Boolean)) fillHand();
+        drawTray();
+        draw();
+      }
       syncModeUI();
       saveProfiles();
     }
@@ -2459,29 +3503,61 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
     const scoreWrap = document.getElementById('scoreWrap');
     scoreWrap.classList.add('swipe-area');
     let modeSwipeStart = null;
+    let scoreTapStart = null;
     scoreWrap.addEventListener('pointerdown', e => {
+      scoreTapStart = { x: e.clientX, y: e.clientY, t: performance.now() };
       modeSwipeStart = { x: e.clientX, y: e.clientY };
       try { scoreWrap.setPointerCapture(e.pointerId); } catch(err) {}
     });
     scoreWrap.addEventListener('pointerup', e => {
-      if (!modeSwipeStart) return;
-      const dx = e.clientX - modeSwipeStart.x;
-      const dy = e.clientY - modeSwipeStart.y;
-      if (Math.abs(dy) > 24 && Math.abs(dy) > Math.abs(dx)) {
-        const order = ['easy', 'medium', 'hard'];
-        const idx = order.indexOf(difficulty);
-        if (dy < 0 && idx < order.length - 1) { // swipe up -> harder
-          setMode(order[idx + 1]);
-          modeLabel.classList.add('pulse');
-          setTimeout(() => modeLabel.classList.remove('pulse'), 260);
+      if (scoreTapStart) {
+        const dx = e.clientX - scoreTapStart.x;
+        const dy = e.clientY - scoreTapStart.y;
+        const dt = performance.now() - scoreTapStart.t;
+        if (Math.hypot(dx, dy) < 12 && dt < 280) {
+          showHighScoreSplash();
         }
-        if (dy > 0 && idx > 0) { // swipe down -> easier
-          setMode(order[idx - 1]);
-          modeLabel.classList.add('pulse');
-          setTimeout(() => modeLabel.classList.remove('pulse'), 260);
-        }
+        scoreTapStart = null;
       }
-      modeSwipeStart = null;
+      if (modeSwipeStart) {
+        const dx = e.clientX - modeSwipeStart.x;
+        const dy = e.clientY - modeSwipeStart.y;
+        if (Math.abs(dy) > 24 && Math.abs(dy) > Math.abs(dx)) {
+          const order = ['easy', 'medium', 'hard'];
+          const idx = order.indexOf(difficulty);
+          if (dy < 0 && idx < order.length - 1) { // swipe up -> harder
+            setMode(order[idx + 1]);
+            modeLabel.classList.add('pulse');
+            setTimeout(() => modeLabel.classList.remove('pulse'), 260);
+          }
+          if (dy > 0 && idx > 0) { // swipe down -> easier
+            setMode(order[idx - 1]);
+            modeLabel.classList.add('pulse');
+            setTimeout(() => modeLabel.classList.remove('pulse'), 260);
+          }
+        }
+        modeSwipeStart = null;
+      }
+    });
+
+    function renderPopupScores() {
+      const el = document.getElementById('popupScores');
+      if (!el) return;
+      el.innerHTML = ['easy','medium','hard'].map(m => {
+        return `<h3>${m} top scores</h3>${formatTopScores(scores[m])}`;
+      }).join('');
+    }
+    function showHighScoreSplash() {
+      renderPopupScores();
+      const modal = document.getElementById('highScoreSplash');
+      modal.classList.remove('hidden');
+      vibrate(20);
+    }
+    function hideHighScoreSplash() {
+      document.getElementById('highScoreSplash').classList.add('hidden');
+    }
+    document.getElementById('highScoreSplash').addEventListener('pointerdown', e => {
+      if (e.target.id === 'highScoreSplash') hideHighScoreSplash();
     });
 
     /* === Splash === */
@@ -2493,6 +3569,7 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
 
     function init() {
       try {
+        recycleBinEl = document.getElementById('recycleBin');
         loadStyle();
         loadProfiles();
         loadScores();
