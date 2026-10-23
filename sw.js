@@ -1,4 +1,4 @@
-const CACHE_NAME = 'slopblast-offline-v4';
+const CACHE_NAME = 'slopblast-offline-v10';
 const ASSETS = [
   './',
   './index.html',

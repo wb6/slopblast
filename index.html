@@ -19,7 +19,8 @@
       --muted: #8b93b1;
       --accent: #7ee7ff;
     }
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+    .modal-scroll { touch-action: pan-y; -webkit-overflow-scrolling: touch; }
     html, body {
       height: 100%;
       margin: 0;
@@ -81,7 +82,33 @@
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
     }
-    #scoreWrap { font-size: 18px; font-weight: 700; color: var(--accent); }
+    .top-left { display: flex; align-items: center; gap: 10px; }
+    #scoreWrap {
+      font-family: ui-monospace, SFMono-Regular, 'Courier New', Courier, monospace;
+      font-variant-numeric: tabular-nums;
+      font-size: 24px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: 2px;
+      text-shadow: 0 -1px 0 #aef5ff, 0 1px 0 #000, 0 0 8px rgba(126,231,255,0.85), 0 0 16px rgba(126,231,255,0.5);
+    }
+    .mode-label {
+      font-size: 9px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--accent);
+      border: 1px solid rgba(126,231,255,0.2);
+      border-radius: 999px;
+      padding: 2px 8px;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+      text-shadow: 0 0 6px rgba(126,231,255,0.35);
+      background: rgba(126,231,255,0.03);
+      box-shadow: 0 0 10px rgba(126,231,255,0.05);
+    }
+    .mode-label.pulse { transform: scale(1.08); background: rgba(126,231,255,0.12); box-shadow: 0 0 16px rgba(126,231,255,0.2); }
     #topbar .btns { display: flex; gap: 8px; }
     #topbar button {
       background: rgba(126, 231, 255, 0.12);
@@ -206,6 +233,7 @@
       -webkit-backdrop-filter: blur(8px);
     }
     .modal.hidden { display: none; }
+    .hidden { display: none; }
     .modal-content {
       background: var(--panel);
       border: 1px solid rgba(255,255,255,0.08);
@@ -241,6 +269,104 @@
       font-weight: 700;
       font-size: 15px;
       cursor: pointer;
+    }
+    .secondary-btn {
+      background: transparent !important;
+      border: 1px solid rgba(255,255,255,0.2) !important;
+      color: var(--muted) !important;
+    }
+    .emoji-btn {
+      width: 56px; height: 46px; padding: 0; font-size: 24px; line-height: 1;
+      background: linear-gradient(135deg, #00c6ff, #0072ff); border: none;
+      border-radius: 14px; cursor: pointer;
+    }
+    #gameOverModal.modal { background: rgba(5,7,14,0.55); }
+    .about-body {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 13px;
+      line-height: 1.55;
+      color: #c2c8dc;
+    }
+    .game-over-title {
+      margin: 0 0 12px;
+      font-size: 44px;
+      font-weight: 900;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      background: linear-gradient(180deg, #ffffff 0%, #7ee7ff 55%, #0072ff 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 2px 18px rgba(126,231,255,0.35);
+      line-height: 1;
+    }
+    .score-label {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      margin: 8px 0 2px;
+    }
+    .final-score {
+      font-family: ui-monospace, SFMono-Regular, 'Courier New', Courier, monospace;
+      font-size: 58px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: 3px;
+      text-shadow: 0 -1px 0 #aef5ff, 0 2px 0 #000, 0 0 14px rgba(126,231,255,0.9), 0 0 28px rgba(126,231,255,0.5);
+      cursor: pointer;
+      margin: 0 0 14px;
+      line-height: 1.05;
+    }
+    .final-stats {
+      font-size: 13px;
+      color: #8b93b1;
+      margin: 0;
+    }
+    .game-over-actions {
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      margin-top: 18px;
+    }
+    .game-action {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      padding: 6px 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .game-action .icon {
+      width: 56px;
+      height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.55);
+      transition: transform 0.12s ease;
+    }
+    .game-action:active .icon { transform: scale(0.92); }
+    .fw-particle {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 1;
+      box-shadow: 0 0 8px currentColor;
     }
     .difficulty { display: flex; gap: 8px; flex-wrap: wrap; }
     .difficulty label {
@@ -313,7 +439,6 @@
     #gameOverModal .modal-content { text-align: center; }
     #gameOverModal p { font-size: 16px; margin: 6px 0; color: #c2c8dc; }
     #gameOverModal .big { font-size: 30px; font-weight: 700; color: var(--accent); margin: 10px 0; }
-    #restartBtn { margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -327,10 +452,13 @@
   </div>
 
   <div id="topbar">
-    <div id="scoreWrap">Score: <span id="scoreVal">0</span></div>
+    <div class="top-left">
+      <div id="scoreWrap"><span id="scoreVal">0</span></div>
+    </div>
     <div class="btns">
+      <div class="mode-label" id="modeLabel" title="Double-tap or swipe up/down to switch mode">Medium</div>
       <button id="newGameBtn">New Game</button>
-      <button id="settingsBtn">Settings</button>
+      <button id="settingsBtn">Options</button>
     </div>
   </div>
 
@@ -347,7 +475,7 @@
   <div id="settingsModal" class="modal hidden">
     <div class="modal-content">
       <div class="modal-scroll">
-        <h2>Settings</h2>
+        <h2>Options</h2>
         <div class="difficulty" id="difficulty">
           <label><input type="radio" name="diff" value="easy"> Easy</label>
           <label><input type="radio" name="diff" value="medium" checked> Medium</label>
@@ -363,32 +491,153 @@
           <span>Easy mystery chance: <b id="mysteryChanceVal">80%</b></span>
           <input type="range" id="mysteryChance" min="1" max="100" value="80">
         </div>
+        <div class="mystery-slider" id="maxMysteriesWrap">
+          <span>Max mystery emojis: <b id="maxMysteriesVal">3</b></span>
+          <input type="range" id="maxMysteries" min="1" max="5" value="3">
+        </div>
 
         <h3>Available pieces for this mode</h3>
         <div id="pieceToggles"></div>
 
         <div class="settings-scores" id="settingsScores"></div>
       </div>
-      <div class="modal-footer">
+      <div class="modal-footer" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <button id="aboutBtn" class="secondary-btn">About</button>
         <button id="closeSettings">Done</button>
       </div>
     </div>
   </div>
 
   <div id="gameOverModal" class="modal hidden">
-    <div class="modal-content">
-      <h2>Game Over</h2>
-      <p>Final score</p>
-      <div class="big" id="finalScore">0</div>
-      <p id="finalStats"></p>
-      <button id="restartBtn">New Game</button>
+    <div class="modal-content" style="text-align:center;background:rgba(16,20,36,0.88); position:relative; overflow:visible;">
+      <div class="game-over-title">GAME OVER</div>
+      <p class="score-label">SCORE</p>
+      <div class="final-score" id="finalScore">0</div>
+      <p class="final-stats" id="finalStats"></p>
+      <div class="game-over-actions">
+        <button id="reloadBtn" class="game-action" title="New Game">
+          <span class="icon">🔄</span>
+          <span>New Game</span>
+        </button>
+      </div>
     </div>
   </div>
+
+  <div id="aboutModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-scroll">
+        <h2>About</h2>
+        <pre id="aboutBody" class="about-body"></pre>
+      </div>
+      <div class="modal-footer">
+        <button id="closeAbout">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="aboutContent" class="hidden"><!--README_CONTENT--># Slop Blast
+
+A mobile-first, installable block-blasting puzzle game that works offline.
+
+## How to play
+
+- Drag pieces from the bottom tray onto the 8×8 grid.
+- Fill a complete row, column, or long diagonal to clear it and score points.
+- **Easy mode**: free line shifting, mystery color bombs, skip pieces, and pushable lines.
+- **Medium mode**: line shifting costs points; mystery emojis appear every few moves.
+- **Hard mode**: nuisance emojis block lines and scoring gets tougher.
+- Double-tap the mode pill in the top bar to cycle modes.
+
+## Controls
+
+| Action                               | How                               |
+| ------------------------------------ | --------------------------------- |
+| Move piece                           | Drag from tray to grid            |
+| Rotate                               | Not needed — pieces are pre-rotated |
+| Shift a row/column                   | Press-and-hold grid, then swipe |
+| Push a row/column (Easy only)        | Press-and-hold grid for 5 s, then swipe |
+| Use mystery color bomb (Easy only)   | Drag the mystery emoji onto a block |
+| Skip a piece (Easy only)             | Triple-tap the piece in the tray (−10 pts) |
+| Open options                         | Tap **Options**                   |
+
+## Offline &amp; install
+
+Serve the folder over `localhost`/HTTPS and add it to your home screen. Opening the file directly (`file://`) will not enable offline caching because the Service Worker needs a real origin.
+
+```bash
+python3 -m http.server 8000
+```
+
+## Tech
+
+- Single-file vanilla HTML/CSS/JS game logic.
+- PWA manifest and Service Worker for offline use.
+- No external libraries, no audio, haptic-only feedback.
+
+## Building
+
+To embed `README.md` into the in-game About screen, run:
+
+```bash
+python3 build.py
+```
+
+## License
+
+Made for fun. No external assets are used.
+
+## Full game rules and features
+
+### Core mechanics (all modes)
+
+- The board is an 8×8 grid.
+- Drag a piece from one of the 3 slots in the bottom tray and drop it onto an empty area on the grid.
+- Pieces cannot be rotated — each rotation exists as its own selectable piece.
+- A line clears when every cell in a **row**, **column**, or either long **diagonal** is filled.
+- Each cleared cell scores **10 points**. The popup counts up as it is added to your total.
+- There is no audio; feedback uses short haptic taps.
+- The game serves from one HTML file, a Web App Manifest, and a Service Worker for offline play.
+
+### Easy mode
+
+- **Goal:** relaxed play. The game never forces a game over.
+- **Line shifting:** press and hold a row/column for about 0.4 s, then swipe left/right or up/down to shift that line. Lines wrap around.
+- **Pushable lines:** press and hold a line for **5 seconds**. The highlight turns orange. Swipe to push all blocks on the line together toward one edge (like a pusher game). No wrapping.
+- **Mystery emoji:** a positive mystery emoji can appear on the board. Drag it onto any block to blow up all connected blocks of the same color for **15 points each**.
+- **Skip piece:** triple-tap a slot to discard its current piece and draw another. Costs **10 points** and your score may go negative.
+- **Mystery spawn:** controlled by a slider in Options (1%–100% per move). Default is 80%.
+- Life spans: each mystery lasts **3 moves** before it disappears and respawns.
+
+### Medium mode
+
+- **Goal:** balance strategy and pressure.
+- **Line shifting:** costs **100 points** each shift.
+- **Mystery emoji:** a positive reward emoji may appear. Clearing the line that contains it multiplies that clear by 2×–5× (weighted toward lower values).
+- **Spawn rule:** a new mystery is only rolled on every **3rd move**, with a **20%** chance.
+- **Game over:** when none of the 3 current pieces can legally be placed. Top scores store whether mystery was on or off.
+
+### Hard mode
+
+- **Goal:** survive the nuisance.
+- **Nuisance emoji:** spawns frequently as a negative emoji (e.g., angry face, poop, stop sign). It occupies a cell and blocks any line that passes through it from clearing.
+- **Line shifting:** costs **half your current score**, with a minimum of **100 points**.
+- **Swapping into Hard:** resets your score to **0** but keeps the current board and refreshes your hand.
+- **Game over:** when none of the 3 pieces can be placed. Managing nuisance lines is the key difficulty.
+
+### Modes quick-switch
+
+Double-tap the mode pill in the top-right of the score bar to cycle Easy → Medium → Hard → Easy. A small pulse confirms the change.
+<!--README_CONTENT--></div>
 
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(err => console.log('SW failed', err));
     }
+
+    // Prevent Safari pinch / double-tap zoom when not running as an installed PWA
+    document.addEventListener('gesturestart', e => e.preventDefault(), { passive: false });
+    document.addEventListener('gesturechange', e => e.preventDefault(), { passive: false });
+    document.addEventListener('gestureend', e => e.preventDefault(), { passive: false });
 
     setTimeout(() => {
       const splash = document.getElementById('splash');
@@ -440,10 +689,13 @@
     let pendingSlot = -1;
     let pendingGhostEl = null;
     let lineShift = null;
-    let mystery = null;
+    let mysteries = [];
+    let nextMysteryId = -1;
     let scorePopups = [];
     let mysteryBursts = [];
     let moveCount = 0;
+    let mysteryDrag = null;
+    const slotTapTimes = [[], [], []];
 
     /* === Piece generation === */
     function rotateMatrix(m) {
@@ -484,7 +736,7 @@
     buildPieces();
 
     ['easy','medium','hard'].forEach(m => {
-      profiles[m] = { enabledKeys: allPieces.map(p => p.key), mystery: true, mysteryChance: 80 };
+      profiles[m] = { enabledKeys: allPieces.map(p => p.key), mystery: true, mysteryChance: 80, maxMysteries: 3 };
     });
 
     /* === Profiles / Scores === */
@@ -499,6 +751,7 @@
               profiles[m].enabledKeys = data[m].enabledKeys;
               if (typeof data[m].mystery === 'boolean') profiles[m].mystery = data[m].mystery;
               if (typeof data[m].mysteryChance === 'number') profiles[m].mysteryChance = data[m].mysteryChance;
+              if (m === 'easy' && typeof data[m].maxMysteries === 'number') profiles[m].maxMysteries = data[m].maxMysteries;
             }
           });
         }
@@ -584,7 +837,8 @@
     /* === Board & Hand === */
     function resetBoard() {
       board = Array.from({length: N}, () => Array(N).fill(0));
-      mystery = null;
+      mysteries = [];
+      nextMysteryId = -1;
     }
 
     function randomPiece() {
@@ -641,11 +895,22 @@
       updateScore();
     }
 
+    function cleanupDrag() {
+      if (drag) {
+        slots[drag.slotIdx].classList.remove('dragging');
+        drag.ghost.remove();
+        drag = null;
+      }
+      removePendingGhost();
+    }
+
     function checkGameOver() {
+      if (difficulty === 'easy') return false; // easy never ends
       const available = hand.filter(Boolean);
       if (available.length === 0) return false;
       const any = available.some(p => canPlacePiece(p));
       if (!any) {
+        cleanupDrag();
         commitPendingScore();
         document.getElementById('finalScore').textContent = score;
         document.getElementById('finalStats').textContent = `Mode: ${difficulty}`;
@@ -693,37 +958,46 @@
       const list = nuisance ? NEGATIVE_EMOJIS : POSITIVE_EMOJIS;
       return list[Math.floor(Math.random() * list.length)];
     }
-    function removeMystery() {
-      if (!mystery) return;
-      board[mystery.r][mystery.c] = 0;
-      mystery = null;
+    function getMystery(r, c) {
+      return mysteries.find(m => m.r === r && m.c === c);
+    }
+    function removeMystery(m) {
+      if (!m) return;
+      if (board[m.r][m.c] === m.id) board[m.r][m.c] = 0;
+      const idx = mysteries.indexOf(m);
+      if (idx !== -1) mysteries.splice(idx, 1);
     }
     function placeMystery(nuisance) {
-      if (!profiles[difficulty].mystery || mystery) return;
+      if (!profiles[difficulty].mystery) return;
+      const max = difficulty === 'easy' ? (profiles.easy.maxMysteries || 3) : 1;
+      if (mysteries.length >= max) return;
       const empties = [];
       for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (board[r][c] === 0) empties.push([r, c]);
       if (empties.length === 0) return;
       const [r, c] = empties[Math.floor(Math.random() * empties.length)];
-      mystery = { r, c, emoji: randomEmoji(nuisance), age: 0, nuisance };
-      board[r][c] = -1;
+      const id = nextMysteryId--;
+      const m = { id, r, c, emoji: randomEmoji(nuisance), age: 0, nuisance };
+      board[r][c] = id;
+      mysteries.push(m);
     }
     function advanceMystery() {
       moveCount++;
-      if (mystery) {
-        mystery.age++;
-        if (mystery.age >= MYSTERY_LIFESPAN) removeMystery();
+      for (let i = mysteries.length - 1; i >= 0; i--) {
+        mysteries[i].age++;
+        if (mysteries[i].age >= MYSTERY_LIFESPAN) removeMystery(mysteries[i]);
       }
-      if (!mystery && profiles[difficulty].mystery) {
-        let chance = 0;
-        if (difficulty === 'easy') {
-          chance = profiles.easy.mysteryChance;
-        } else if (difficulty === 'medium') {
-          if (moveCount % 3 === 0) chance = 20;
-        } else { // hard: random / frequent nuisance
-          chance = 75;
-        }
-        if (Math.random() * 100 < chance) {
-          placeMystery(difficulty === 'hard');
+      if (profiles[difficulty].mystery) {
+        const max = difficulty === 'easy' ? (profiles.easy.maxMysteries || 3) : 1;
+        if (mysteries.length < max) {
+          let chance = 0;
+          if (difficulty === 'easy') {
+            chance = profiles.easy.mysteryChance;
+          } else if (difficulty === 'medium') {
+            if (moveCount % 3 === 0) chance = 20;
+          } else {
+            chance = 75;
+          }
+          if (Math.random() * 100 < chance) placeMystery(difficulty === 'hard');
         }
       }
       draw();
@@ -746,44 +1020,223 @@
       return difficulty === 'easy' || score >= shiftLineCost();
     }
     function shiftRow(r, dir) {
-      if (dir > 0) { // right
+      if (dir > 0) {
         const last = board[r][N - 1];
         for (let c = N - 1; c > 0; c--) board[r][c] = board[r][c - 1];
         board[r][0] = last;
-      } else { // left
+      } else {
         const first = board[r][0];
         for (let c = 0; c < N - 1; c++) board[r][c] = board[r][c + 1];
         board[r][N - 1] = first;
       }
-      updateMysteryAfterShift(r, null);
+      syncMysteryPositions();
     }
     function shiftCol(c, dir) {
-      if (dir > 0) { // down
+      if (dir > 0) {
         const last = board[N - 1][c];
         for (let r = N - 1; r > 0; r--) board[r][c] = board[r - 1][c];
         board[0][c] = last;
-      } else { // up
+      } else {
         const first = board[0][c];
         for (let r = 0; r < N - 1; r++) board[r][c] = board[r + 1][c];
         board[N - 1][c] = first;
       }
-      updateMysteryAfterShift(null, c);
+      syncMysteryPositions();
     }
-    function updateMysteryAfterShift(row, col) {
-      if (!mystery) return;
-      if (row !== null && mystery.r === row) { /* still in same row after wrap */ }
-      if (col !== null && mystery.c === col) { /* still in same col after wrap */ }
-      // find where the mystery ended up after wrap
+    function syncMysteryPositions() {
+      const found = new Set();
       for (let r = 0; r < N; r++) {
         for (let c = 0; c < N; c++) {
-          if (board[r][c] === -1) { mystery.r = r; mystery.c = c; return; }
+          const v = board[r][c];
+          if (v < 0) {
+            const m = mysteries.find(x => x.id === v);
+            if (m) { m.r = r; m.c = c; found.add(v); }
+          }
         }
       }
-      mystery = null;
+      for (let i = mysteries.length - 1; i >= 0; i--) {
+        if (!found.has(mysteries[i].id)) mysteries.splice(i, 1);
+      }
+    }
+    function nudgeGroupRow(r, c, dir) {
+      if (dir > 0) {
+        let end = c;
+        while (end + 1 < N && board[r][end + 1] !== 0) end++;
+        if (end + 1 >= N || board[r][end + 1] !== 0) return false;
+        for (let cc = end + 1; cc > c; cc--) board[r][cc] = board[r][cc - 1];
+        board[r][c] = 0;
+      } else {
+        let start = c;
+        while (start - 1 >= 0 && board[r][start - 1] !== 0) start--;
+        if (start - 1 < 0 || board[r][start - 1] !== 0) return false;
+        for (let cc = start - 1; cc < c; cc++) board[r][cc] = board[r][cc + 1];
+        board[r][c] = 0;
+      }
+      return true;
+    }
+    function nudgeGroupCol(r, c, dir) {
+      if (dir > 0) {
+        let end = r;
+        while (end + 1 < N && board[end + 1][c] !== 0) end++;
+        if (end + 1 >= N || board[end + 1][c] !== 0) return false;
+        for (let rr = end + 1; rr > r; rr--) board[rr][c] = board[rr - 1][c];
+        board[r][c] = 0;
+      } else {
+        let start = r;
+        while (start - 1 >= 0 && board[start - 1][c] !== 0) start--;
+        if (start - 1 < 0 || board[start - 1][c] !== 0) return false;
+        for (let rr = start - 1; rr < r; rr++) board[rr][c] = board[rr + 1][c];
+        board[r][c] = 0;
+      }
+      return true;
+    }
+    function nudgeMystery(r, c, dR, dC) {
+      const nr = r + dR, nc = c + dC;
+      const m = mysteries.find(x => x.id === board[r][c]);
+      if (!m || nr < 0 || nr >= N || nc < 0 || nc >= N || board[nr][nc] !== 0) return false;
+      board[nr][nc] = m.id;
+      board[r][c] = 0;
+      m.r = nr; m.c = nc;
+      return true;
     }
     function cancelLineHold() {
-      if (lineShift && lineShift.holdTimer) clearTimeout(lineShift.holdTimer);
+      if (lineShift) {
+        if (lineShift.holdTimer) clearTimeout(lineShift.holdTimer);
+        if (lineShift.pushTimer) clearTimeout(lineShift.pushTimer);
+      }
       lineShift = null;
+      draw();
+    }
+
+    /* === Easy-only mystery drag color bomb === */
+    function floodFillSameColor(r, c, colorId) {
+      const queue = [[r, c]];
+      const seen = new Set([`${r},${c}`]);
+      const cells = [];
+      const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+      while (queue.length) {
+        const [cr, cc] = queue.shift();
+        cells.push([cr, cc]);
+        dirs.forEach(([dr, dc]) => {
+          const nr = cr + dr, nc = cc + dc;
+          if (nr >= 0 && nr < N && nc >= 0 && nc < N && board[nr][nc] === colorId && !seen.has(`${nr},${nc}`)) {
+            seen.add(`${nr},${nc}`);
+            queue.push([nr, nc]);
+          }
+        });
+      }
+      return cells;
+    }
+    function startMysteryDrag(x, y, id) {
+      const m = mysteries.find(x => x.id === id);
+      if (!m) return;
+      const ghost = document.createElement('div');
+      ghost.className = 'drag-ghost';
+      ghost.textContent = m.emoji;
+      ghost.style.width = '46px';
+      ghost.style.height = '46px';
+      ghost.style.fontSize = '38px';
+      ghost.style.lineHeight = '46px';
+      ghost.style.textAlign = 'center';
+      ghost.style.textShadow = '0 2px 10px rgba(0,0,0,0.5)';
+      document.body.appendChild(ghost);
+      board[m.r][m.c] = 0;
+      mysteryDrag = { ghost, id, originR: m.r, originC: m.c };
+      moveMysteryDrag(x, y);
+      vibrate(15);
+    }
+    function moveMysteryDrag(x, y) {
+      if (!mysteryDrag) return;
+      mysteryDrag.ghost.style.left = (x - 23) + 'px';
+      mysteryDrag.ghost.style.top = (y - 23) + 'px';
+    }
+    function restoreDraggedMystery() {
+      if (!mysteryDrag) return;
+      const m = mysteries.find(x => x.id === mysteryDrag.id);
+      if (m) {
+        m.r = mysteryDrag.originR;
+        m.c = mysteryDrag.originC;
+        board[m.r][m.c] = m.id;
+      }
+    }
+    function endMysteryDrag(x, y) {
+      if (!mysteryDrag) return;
+      const rect = gridCanvas.getBoundingClientRect();
+      const c = Math.floor((x - rect.left - gridX) / cellSize);
+      const r = Math.floor((y - rect.top - gridY) / cellSize);
+      const inside = r >= 0 && r < N && c >= 0 && c < N;
+      const m = mysteries.find(x => x.id === mysteryDrag.id);
+      if (inside && m) {
+        const target = board[r][c];
+        const dist = Math.abs(r - m.r) + Math.abs(c - m.c);
+        if (difficulty === 'medium') {
+          if (dist === 1 && target === 0) {
+            board[r][c] = m.id;
+            m.r = r; m.c = c;
+          } else {
+            restoreDraggedMystery();
+          }
+        } else {
+          // Easy mode
+          if (target === 0) {
+            board[r][c] = m.id;
+            m.r = r; m.c = c;
+          } else if (target < 0 && target !== m.id) {
+            // Merge two mystery emojis: cross explosion
+            removeMystery(m);
+            removeMystery(getMystery(r, c));
+            board[r][c] = 0;
+            const now = performance.now();
+            const cells = [];
+            const add = (rr, cc) => { if (board[rr][cc] !== 0 && !cells.some(p => p[0] === rr && p[1] === cc)) cells.push([rr, cc]); };
+            for (let cc = 0; cc < N; cc++) add(r, cc);
+            for (let rr = 0; rr < N; rr++) add(rr, c);
+            let points = 0;
+            cells.forEach(([cr, cc]) => {
+              const v = board[cr][cc];
+              board[cr][cc] = 0;
+              const color = v < 0 ? '#ffd700' : COLORS[v];
+              explosions.push({ x: gridX + cc * cellSize, y: gridY + cr * cellSize, colorId: v, color, start: now });
+              points += 25;
+            });
+            spawnScorePopup(gridX + c * cellSize + cellSize / 2, gridY + r * cellSize + cellSize / 2, points, '✨');
+            vibrate(45);
+            clearLines();
+            advanceMystery();
+            startAnimate();
+          } else if (target > 0) {
+            const colorId = target;
+            const cells = floodFillSameColor(r, c, colorId);
+            const points = cells.length * 15;
+            const now = performance.now();
+            cells.forEach(([cr, cc]) => {
+              board[cr][cc] = 0;
+              explosions.push({ x: gridX + cc * cellSize, y: gridY + cr * cellSize, colorId, start: now });
+            });
+            removeMystery(m);
+            spawnScorePopup(gridX + c * cellSize + cellSize / 2, gridY + r * cellSize + cellSize / 2, points, null);
+            vibrate(35);
+            clearLines();
+            advanceMystery();
+            startAnimate();
+          } else {
+            restoreDraggedMystery();
+          }
+        }
+      } else {
+        restoreDraggedMystery();
+      }
+      mysteryDrag.ghost.remove();
+      mysteryDrag = null;
+      draw();
+      startAnimate();
+    }
+    function cancelMysteryDrag() {
+      if (mysteryDrag) {
+        restoreDraggedMystery();
+        mysteryDrag.ghost.remove();
+        mysteryDrag = null;
+      }
       draw();
     }
 
@@ -797,12 +1250,14 @@
 
     /* === Lines & Scoring === */
     function lineHasNuisance(r, c, type) {
-      if (!mystery || !mystery.nuisance) return false;
-      if (type === 'row') return mystery.r === r;
-      if (type === 'col') return mystery.c === c;
-      if (type === 'diag1') return mystery.r === mystery.c;
-      if (type === 'diag2') return mystery.r + mystery.c === N - 1;
-      return false;
+      return mysteries.some(m => {
+        if (!m.nuisance) return false;
+        if (type === 'row') return m.r === r;
+        if (type === 'col') return m.c === c;
+        if (type === 'diag1') return m.r === m.c;
+        if (type === 'diag2') return m.r + m.c === N - 1;
+        return false;
+      });
     }
 
     function clearLines() {
@@ -845,7 +1300,8 @@
 
       toClear.forEach(k => {
         const [rr, cc] = k.split(',').map(Number);
-        if (mystery && mystery.r === rr && mystery.c === cc) {
+        const m = getMystery(rr, cc);
+        if (m && !m.nuisance) {
           mysteryCleared = true;
           mysteryCellX = gridX + cc * cellSize + cellSize / 2;
           mysteryCellY = gridY + rr * cellSize + cellSize / 2;
@@ -860,8 +1316,10 @@
         }
       });
 
-      // remove cleared mystery
-      if (mystery && toClear.has(`${mystery.r},${mystery.c}`)) mystery = null;
+      // remove cleared mysteries
+      for (let i = mysteries.length - 1; i >= 0; i--) {
+        if (toClear.has(`${mysteries[i].r},${mysteries[i].c}`)) removeMystery(mysteries[i]);
+      }
 
       clearCenterX /= cellsCleared;
       clearCenterY /= cellsCleared;
@@ -963,13 +1421,12 @@
       ctx.strokeRect(x - 0.5, y - 0.5, size + 1, size + 1);
     }
 
-    function drawMysteryCell(r, c) {
-      if (!mystery || mystery.r !== r || mystery.c !== c) return;
-      const x = gridX + c * cellSize;
-      const y = gridY + r * cellSize;
+    function drawMysteryAt(id, x, y) {
+      const m = mysteries.find(x => x.id === id);
+      if (!m) return;
       const pulse = 0.6 + 0.4 * Math.sin(performance.now() / 180);
       gridCtx.save();
-      if (mystery.nuisance) {
+      if (m.nuisance) {
         gridCtx.fillStyle = `rgba(255, 40, 60, ${0.15 + 0.12 * pulse})`;
         gridCtx.shadowColor = '#ff283c';
       } else {
@@ -981,44 +1438,47 @@
       gridCtx.font = `bold ${Math.floor(cellSize * 0.6)}px serif`;
       gridCtx.textAlign = 'center';
       gridCtx.textBaseline = 'middle';
-      gridCtx.fillText(mystery.emoji, x + cellSize / 2, y + cellSize / 2 + 2);
+      gridCtx.fillText(m.emoji, x + cellSize / 2, y + cellSize / 2 + 2);
       gridCtx.restore();
     }
 
     function drawLineShiftHighlight() {
       if (!lineShift) return;
-      const { r, c, armed, mode, shifted } = lineShift;
-      const alpha = armed && !shifted ? 0.35 + 0.25 * Math.sin(performance.now() / 120) : 0.35;
+      const { r, c, armed, mode, pushable } = lineShift;
+      let alpha = armed && !pushable ? 0.35 + 0.25 * Math.sin(performance.now() / 120) : 0.35;
+      if (pushable) alpha = 0.45 + 0.25 * Math.sin(performance.now() / 180);
       gridCtx.save();
-      gridCtx.strokeStyle = `rgba(126, 231, 255, ${alpha + 0.3})`;
+      const color = pushable ? '255, 140, 40' : '126, 231, 255';
+      gridCtx.strokeStyle = `rgba(${color}, ${alpha + 0.3})`;
       gridCtx.lineWidth = 3;
-      if (mode === 'row' || (!mode && armed)) {
+      if (mode === 'row' || (!mode && armed) || pushable) {
         gridCtx.strokeRect(gridX, gridY + r * cellSize, N * cellSize, cellSize);
       }
-      if (mode === 'col' || (!mode && armed)) {
+      if (mode === 'col' || (!mode && armed) || pushable) {
         gridCtx.strokeRect(gridX + c * cellSize, gridY, cellSize, N * cellSize);
       }
       gridCtx.restore();
     }
 
     function draw() {
+      if (!board || board.length === 0) return;
       const rect = gridCanvas.getBoundingClientRect();
       gridCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
       gridCtx.clearRect(0, 0, rect.width, rect.height);
 
-      gridCtx.fillStyle = '#0a0c18';
+      gridCtx.fillStyle = '#0d111f';
       gridCtx.fillRect(gridX, gridY, N * cellSize, N * cellSize);
 
       // board drop shadow
       gridCtx.save();
       gridCtx.shadowColor = 'rgba(0,0,0,0.45)';
       gridCtx.shadowBlur = 16;
-      gridCtx.fillStyle = '#0a0c18';
+      gridCtx.fillStyle = '#0d111f';
       gridCtx.fillRect(gridX, gridY, N * cellSize, N * cellSize);
       gridCtx.restore();
 
       // inner grid lines
-      gridCtx.strokeStyle = 'rgba(255,255,255,0.06)';
+      gridCtx.strokeStyle = 'rgba(255,255,255,0.085)';
       gridCtx.lineWidth = 1;
       gridCtx.beginPath();
       for (let i = 0; i <= N; i++) {
@@ -1034,7 +1494,7 @@
       for (let r = 0; r < N; r++) {
         for (let c = 0; c < N; c++) {
           if (board[r][c] > 0) drawBlock(gridCtx, gridX + c * cellSize, gridY + r * cellSize, cellSize, board[r][c]);
-          if (mystery && mystery.r === r && mystery.c === c) drawMysteryCell(r, c);
+          if (board[r][c] < 0) drawMysteryAt(board[r][c], gridX + c * cellSize, gridY + r * cellSize);
         }
       }
 
@@ -1067,8 +1527,9 @@
         const cy = p.y + cellSize / 2;
         gridCtx.save();
         gridCtx.globalAlpha = alpha;
-        gridCtx.fillStyle = COLORS[p.colorId];
-        gridCtx.shadowColor = COLORS[p.colorId];
+        const color = p.color || COLORS[p.colorId] || '#7ee7ff';
+        gridCtx.fillStyle = color;
+        gridCtx.shadowColor = color;
         gridCtx.shadowBlur = 14 * alpha;
         gridCtx.fillRect(cx - size / 2, cy - size / 2, size, size);
         gridCtx.restore();
@@ -1297,7 +1758,28 @@
       slot.addEventListener('pointerdown', e => {
         const idx = parseInt(slot.dataset.idx, 10);
         const piece = hand[idx];
-        if (!piece || drag || lineShift) return;
+        if (!piece) return;
+
+        if (difficulty === 'easy') {
+          const now = performance.now();
+          slotTapTimes[idx] = slotTapTimes[idx].filter(t => now - t < 550);
+          slotTapTimes[idx].push(now);
+          if (slotTapTimes[idx].length >= 3) {
+            slotTapTimes[idx] = [];
+            score -= 10;
+            updateScore();
+            hand[idx] = null;
+            removePendingGhost();
+            afterPlace(idx);
+            drawTray();
+            draw();
+            vibrate(20);
+            e.preventDefault();
+            return;
+          }
+        }
+
+        if (drag || lineShift) return;
         e.preventDefault();
         startDrag(piece, idx, e.clientX, e.clientY);
         slot.setPointerCapture(e.pointerId);
@@ -1324,29 +1806,92 @@
       });
     });
 
-    /* === Grid line shift === */
+    /* === Grid line shift & easy mystery drag === */
     gridCanvas.addEventListener('pointerdown', e => {
-      if (drag) return;
+      if (drag || mysteryDrag || lineShift) return;
       const rect = gridCanvas.getBoundingClientRect();
       const x = e.clientX - rect.left - gridX;
       const y = e.clientY - rect.top - gridY;
       if (x < 0 || y < 0 || x > N * cellSize || y > N * cellSize) return;
       const c = Math.min(N - 1, Math.max(0, Math.floor(x / cellSize)));
       const r = Math.min(N - 1, Math.max(0, Math.floor(y / cellSize)));
-      // ignore if this cell is part of a piece being aimed at in a line? no
-      const timer = setTimeout(() => {
-        lineShift = { r, c, startX: e.clientX, startY: e.clientY, armed: true, shifted: false, mode: null, holdTimer: null };
+
+      // Easy/Medium: drag a positive mystery emoji
+      const cell = board[r][c];
+      if ((difficulty === 'easy' || difficulty === 'medium') && cell < 0) {
+        const m = getMystery(r, c);
+        if (m && !m.nuisance) {
+          startMysteryDrag(e.clientX, e.clientY, m.id);
+          try { gridCanvas.setPointerCapture(e.pointerId); } catch(err) {}
+          return;
+        }
+      }
+
+      const holdTimer = setTimeout(() => {
+        if (!lineShift) return;
+        lineShift.armed = true;
         vibrate(18);
         draw();
       }, 420);
-      lineShift = { r, c, startX: e.clientX, startY: e.clientY, armed: false, shifted: false, mode: null, holdTimer: timer };
+      const canPushEventually = difficulty === 'easy' || (difficulty === 'medium' && cell < 0);
+      const pushTimer = canPushEventually ? setTimeout(() => {
+        if (!lineShift) return;
+        const pushMystery = cell < 0 ? getMystery(lineShift.r, lineShift.c) : null;
+        if (difficulty === 'medium' && (!pushMystery || pushMystery.nuisance)) { lineShift.pushable = false; return; }
+        lineShift.pushable = true;
+        lineShift.armed = false;
+        vibrate([20, 20]);
+        draw();
+      }, 5000) : null;
+      lineShift = { r, c, startX: e.clientX, startY: e.clientY, armed: false, shifted: false, pushable: false, mode: null, holdTimer, pushTimer, lastPush: 0 };
+      try { gridCanvas.setPointerCapture(e.pointerId); } catch(err) {}
     });
 
     gridCanvas.addEventListener('pointermove', e => {
+      if (mysteryDrag) { moveMysteryDrag(e.clientX, e.clientY); return; }
       if (!lineShift) return;
-      if (lineShift.shifted) return;
+
       const dx = e.clientX - lineShift.startX;
       const dy = e.clientY - lineShift.startY;
+
+      if (lineShift.pushable) {
+        const now = performance.now();
+        if (now - lineShift.lastPush < 220) return;
+        const { r, c } = lineShift;
+        if (board[r][c] === 0) return;
+        const threshold = cellSize * 0.45;
+        let moved = false;
+        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > threshold) {
+          const dir = dx > 0 ? 1 : -1;
+          if (difficulty === 'medium') {
+            moved = nudgeMystery(r, c, 0, dir);
+          } else {
+            moved = nudgeGroupRow(r, c, dir);
+            if (moved) lineShift.c += dir;
+          }
+        } else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > threshold) {
+          const dir = dy > 0 ? 1 : -1;
+          if (difficulty === 'medium') {
+            moved = nudgeMystery(r, c, dir, 0);
+          } else {
+            moved = nudgeGroupCol(r, c, dir);
+            if (moved) lineShift.r += dir;
+          }
+        }
+        if (moved) {
+          syncMysteryPositions();
+          lineShift.lastPush = now;
+          lineShift.startX = e.clientX;
+          lineShift.startY = e.clientY;
+          vibrate(25);
+          clearLines();
+          advanceMystery();
+          startAnimate();
+        }
+        return;
+      }
+
+      if (lineShift.shifted) return;
 
       if (!lineShift.armed) {
         if (Math.hypot(dx, dy) > 14) cancelLineHold();
@@ -1387,23 +1932,30 @@
       }
     });
 
-    function endLineShift() {
-      if (!lineShift) return;
-      cancelLineHold();
+    function endGridPointer(e) {
+      if (mysteryDrag) {
+        endMysteryDrag(e.clientX, e.clientY);
+        return;
+      }
+      if (lineShift) cancelLineHold();
     }
-    gridCanvas.addEventListener('pointerup', endLineShift);
-    gridCanvas.addEventListener('pointercancel', endLineShift);
+    gridCanvas.addEventListener('pointerup', endGridPointer);
+    gridCanvas.addEventListener('pointercancel', endGridPointer);
 
     document.addEventListener('contextmenu', e => e.preventDefault());
 
     /* === UI buttons === */
     function newGame() {
+      cleanupDrag();
+      resetBoard();
+      cancelLineHold();
       explosions = [];
       scorePopups.forEach(p => p.el.remove());
       scorePopups = [];
       mysteryBursts = [];
       moveCount = 0;
-      resetBoard();
+      if (mysteryDrag && mysteryDrag.ghost) mysteryDrag.ghost.remove();
+      mysteryDrag = null;
       score = 0;
       hand = [null, null, null];
       removePendingGhost();
@@ -1416,17 +1968,50 @@
       checkGameOver();
     }
 
+    function syncModeUI() {
+      document.getElementById('modeLabel').textContent = difficulty;
+      const diffInput = document.querySelector(`input[name="diff"][value="${difficulty}"]`);
+      if (diffInput) diffInput.checked = true;
+    }
+
+    function setMode(mode) {
+      if (mode === difficulty) return;
+      difficulty = mode;
+      applyProfile(mode);
+      if (difficulty === 'hard') { score = 0; updateScore(); }
+      hand = hand.map(p => p ? randomPiece() : null);
+      if (!hand.some(Boolean)) fillHand();
+      drawTray();
+      draw();
+      syncModeUI();
+      saveProfiles();
+    }
+
+    function cycleMode() {
+      const order = ['easy', 'medium', 'hard'];
+      setMode(order[(order.indexOf(difficulty) + 1) % 3]);
+      const label = document.getElementById('modeLabel');
+      label.classList.add('pulse');
+      setTimeout(() => label.classList.remove('pulse'), 260);
+    }
+
     function renderSettings() {
-      document.querySelectorAll('input[name="diff"]').forEach(el => { el.checked = el.value === difficulty; });
+      syncModeUI();
       document.getElementById('mysteryToggle').checked = profiles[difficulty].mystery;
       const sliderWrap = document.getElementById('mysterySliderWrap');
       const slider = document.getElementById('mysteryChance');
+      const maxWrap = document.getElementById('maxMysteriesWrap');
+      const maxSlider = document.getElementById('maxMysteries');
       if (difficulty === 'easy') {
         sliderWrap.classList.add('show');
+        maxWrap.classList.add('show');
         slider.value = profiles.easy.mysteryChance;
         document.getElementById('mysteryChanceVal').textContent = profiles.easy.mysteryChance + '%';
+        maxSlider.value = profiles.easy.maxMysteries;
+        document.getElementById('maxMysteriesVal').textContent = profiles.easy.maxMysteries;
       } else {
         sliderWrap.classList.remove('show');
+        maxWrap.classList.remove('show');
       }
       const container = document.getElementById('pieceToggles');
       container.innerHTML = '';
@@ -1466,7 +2051,6 @@
     }
 
     document.getElementById('newGameBtn').addEventListener('click', () => { vibrate(25); newGame(); });
-    document.getElementById('restartBtn').addEventListener('click', () => { vibrate(25); newGame(); });
     document.getElementById('settingsBtn').addEventListener('click', () => {
       renderSettings();
       document.getElementById('settingsModal').classList.remove('hidden');
@@ -1495,6 +2079,91 @@
       document.getElementById('mysteryChanceVal').textContent = e.target.value + '%';
       saveProfiles();
     });
+    document.getElementById('maxMysteries').addEventListener('input', e => {
+      profiles.easy.maxMysteries = parseInt(e.target.value, 10);
+      document.getElementById('maxMysteriesVal').textContent = e.target.value;
+      saveProfiles();
+    });
+
+    document.getElementById('reloadBtn').addEventListener('click', () => { vibrate(25); newGame(); });
+
+    function spawnFirework(x, y) {
+      const modal = document.querySelector('#gameOverModal .modal-content');
+      if (!modal) return;
+      const colors = ['#ff9500', '#00f0f0', '#ff2222', '#00dd55', '#ffd700', '#ff66cc', '#7ee7ff', '#aa44ff'];
+      for (let i = 0; i < 16; i++) {
+        const p = document.createElement('span');
+        p.className = 'fw-particle';
+        const color = colors[i % colors.length];
+        p.style.background = color;
+        p.style.color = color;
+        p.style.left = x + 'px';
+        p.style.top = y + 'px';
+        modal.appendChild(p);
+        const angle = (Math.PI * 2 * i) / 16 + Math.random() * 0.3;
+        const dist = 50 + Math.random() * 50;
+        const dx = Math.cos(angle) * dist;
+        const dy = Math.sin(angle) * dist;
+        p.animate([
+          { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+          { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0)`, opacity: 0 }
+        ], { duration: 800, easing: 'ease-out', fill: 'forwards' });
+        setTimeout(() => p.remove(), 800);
+      }
+      vibrate(20);
+    }
+
+    const finalScoreEl = document.getElementById('finalScore');
+    finalScoreEl.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      const modal = finalScoreEl.closest('.modal-content');
+      const scoreRect = finalScoreEl.getBoundingClientRect();
+      const modalRect = modal.getBoundingClientRect();
+      spawnFirework(scoreRect.left + scoreRect.width / 2 - modalRect.left, scoreRect.top + scoreRect.height / 2 - modalRect.top);
+    });
+
+    document.getElementById('aboutBtn').addEventListener('click', () => {
+      const aboutBody = document.getElementById('aboutBody');
+      const src = document.getElementById('aboutContent');
+      aboutBody.textContent = src ? src.textContent : 'About content missing.';
+      document.getElementById('aboutModal').classList.remove('hidden');
+    });
+    document.getElementById('closeAbout').addEventListener('click', () => {
+      document.getElementById('aboutModal').classList.add('hidden');
+    });
+
+    // Mode label: double-tap cycles forward; swipe up/down cycles through modes
+    const modeLabel = document.getElementById('modeLabel');
+    modeLabel.addEventListener('dblclick', cycleMode);
+    let lastTap = 0;
+    let modeSwipeStart = null;
+    modeLabel.addEventListener('pointerdown', e => {
+      modeSwipeStart = { x: e.clientX, y: e.clientY };
+      try { modeLabel.setPointerCapture(e.pointerId); } catch(err) {}
+      const now = performance.now();
+      if (now - lastTap < 300) cycleMode();
+      lastTap = now;
+    });
+    modeLabel.addEventListener('pointerup', e => {
+      if (!modeSwipeStart) return;
+      const dx = e.clientX - modeSwipeStart.x;
+      const dy = e.clientY - modeSwipeStart.y;
+      if (Math.abs(dy) > 24 && Math.abs(dy) > Math.abs(dx)) {
+        const order = ['easy', 'medium', 'hard'];
+        const idx = order.indexOf(difficulty);
+        if (dy < 0 && idx < order.length - 1) { // swipe up -> harder
+          setMode(order[idx + 1]);
+          modeLabel.classList.add('pulse');
+          setTimeout(() => modeLabel.classList.remove('pulse'), 260);
+        }
+        if (dy > 0 && idx > 0) { // swipe down -> easier
+          setMode(order[idx - 1]);
+          modeLabel.classList.add('pulse');
+          setTimeout(() => modeLabel.classList.remove('pulse'), 260);
+        }
+      }
+      modeSwipeStart = null;
+    });
 
     /* === Splash === */
     function hideSplash() {
@@ -1508,8 +2177,7 @@
         loadProfiles();
         loadScores();
         renderSplashScores();
-        const diffInput = document.querySelector(`input[name="diff"][value="${difficulty}"]`);
-        if (diffInput) diffInput.checked = true;
+        syncModeUI();
         window.addEventListener('resize', resize);
         resize();
         newGame();
