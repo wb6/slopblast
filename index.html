@@ -1534,16 +1534,28 @@ The active mode is shown as a small label directly under the score. Swipe up or 
       }
     }
 
-    function drawBlock(ctx, x, y, size, colorId) {
-      const color = colorId === -1 ? '#2a2350' : COLORS[colorId];
+    function roundRectPath(ctx, x, y, w, h, r) {
+      const rr = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + rr, y);
+      ctx.lineTo(x + w - rr, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+      ctx.lineTo(x + w, y + h - rr);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+      ctx.lineTo(x + rr, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - rr);
+      ctx.lineTo(x, y + rr);
+      ctx.quadraticCurveTo(x, y, x + rr, y);
+      ctx.closePath();
+    }
 
+    function drawCartoonBlock(ctx, x, y, size, color) {
       // base
       ctx.fillStyle = color;
       ctx.fillRect(x, y, size, size);
 
       // light top-left bevel
-      const light = colorId === -1 ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.32)';
-      ctx.fillStyle = light;
+      ctx.fillStyle = 'rgba(255,255,255,0.32)';
       ctx.fillRect(x, y, size, size * 0.17);
       ctx.fillRect(x, y, size * 0.17, size);
 
@@ -1561,8 +1573,91 @@ The active mode is shown as a small label directly under the score. Swipe up or 
 
       // outline
       ctx.strokeStyle = '#05070d';
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(x - 0.5, y - 0.5, size + 1, size + 1);
+      ctx.lineWidth = Math.max(1, size * 0.08);
+      ctx.strokeRect(x, y, size, size);
+    }
+
+    function drawHalloweenBlock(ctx, x, y, size, color) {
+      const r = size * 0.18;
+
+      // glowing rounded body
+      ctx.save();
+      ctx.shadowColor = color;
+      ctx.shadowBlur = size * 0.22;
+      ctx.fillStyle = color;
+      roundRectPath(ctx, x, y, size, size, r);
+      ctx.fill();
+      ctx.restore();
+
+      // inner carved shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.22)';
+      roundRectPath(ctx, x + size * 0.10, y + size * 0.10, size * 0.80, size * 0.80, r * 0.6);
+      ctx.fill();
+
+      // eye glint
+      ctx.fillStyle = 'rgba(255,255,255,0.60)';
+      ctx.beginPath();
+      ctx.arc(x + size * 0.30, y + size * 0.30, size * 0.10, 0, Math.PI * 2);
+      ctx.fill();
+
+      // amber glow spot
+      ctx.fillStyle = 'rgba(255, 160, 20, 0.35)';
+      ctx.beginPath();
+      ctx.arc(x + size * 0.70, y + size * 0.70, size * 0.18, 0, Math.PI * 2);
+      ctx.fill();
+
+      // dark outline
+      ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+      ctx.lineWidth = Math.max(1, size * 0.06);
+      roundRectPath(ctx, x, y, size, size, r);
+      ctx.stroke();
+    }
+
+    function drawChristmasBlock(ctx, x, y, size, color) {
+      const r = size * 0.12;
+
+      // base gift block
+      ctx.fillStyle = color;
+      roundRectPath(ctx, x, y, size, size, r);
+      ctx.fill();
+
+      // snow cap on top
+      ctx.fillStyle = 'rgba(255,255,255,0.75)';
+      roundRectPath(ctx, x, y + size * 0.02, size, size * 0.38, r);
+      ctx.fill();
+
+      // ribbon band lower
+      ctx.fillStyle = 'rgba(255,255,255,0.30)';
+      roundRectPath(ctx, x + size * 0.12, y + size * 0.55, size * 0.76, size * 0.18, size * 0.04);
+      ctx.fill();
+
+      // ribbon vertical cross
+      ctx.fillStyle = 'rgba(255,255,255,0.25)';
+      roundRectPath(ctx, x + size * 0.41, y + size * 0.38, size * 0.18, size * 0.60, size * 0.04);
+      ctx.fill();
+
+      // tiny star/glint
+      ctx.fillStyle = 'rgba(255,255,220,0.85)';
+      ctx.beginPath();
+      ctx.arc(x + size * 0.73, y + size * 0.78, size * 0.09, 0, Math.PI * 2);
+      ctx.fill();
+
+      // outline
+      ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+      ctx.lineWidth = Math.max(1, size * 0.05);
+      roundRectPath(ctx, x, y, size, size, r);
+      ctx.stroke();
+    }
+
+    function drawBlock(ctx, x, y, size, colorId) {
+      const color = colorId === -1 ? '#2a2350' : COLORS[colorId];
+      if (style === 'halloween') {
+        drawHalloweenBlock(ctx, x, y, size, color);
+      } else if (style === 'christmas') {
+        drawChristmasBlock(ctx, x, y, size, color);
+      } else {
+        drawCartoonBlock(ctx, x, y, size, color);
+      }
     }
 
     function drawMysteryAt(id, x, y) {
