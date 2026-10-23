@@ -967,6 +967,24 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
     const MYSTERY_LIFESPAN = 3;
     const SPAWN_ANIM_DURATION = 380;
     const STAR_BURST_DURATION = 100;
+    const EXPLOSION_TRACE_DURATION = 520;
+    const EXPLOSION_THEMES = {
+      cartoon: {
+        shapes: ['rect','circle','diamond','star'],
+        sparks: ['#ffffff','#7ee7ff','#ffd700'],
+        ambient: 'sparkle'
+      },
+      halloween: {
+        shapes: ['pumpkin','bat','ghost','slime','circle'],
+        sparks: ['#ff7b00','#9d4edd','#39ff14','#ffcc00'],
+        ambient: 'bat'
+      },
+      christmas: {
+        shapes: ['snowflake','gift','star','ribbon','circle'],
+        sparks: ['#ffffff','#c1121f','#2d6a4f','#f4d03f'],
+        ambient: 'snow'
+      }
+    };
 
     function easeOutBack(t) {
       const c1 = 1.70158;
@@ -1005,6 +1023,7 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
     let pendingMysteryDrops = [];
     let screenShake = 0;
     let starBursts = [];
+    let explosionTraces = [];
     let lastRenderedScore = 0;
     let triggeredMilestones = new Set();
     const slotTapTimes = [[], [], []];
@@ -1764,25 +1783,46 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
             board[r][c] = m.id;
             m.r = r; m.c = c;
           } else if (target < 0 && target !== m.id) {
-            // Merge two mystery emojis: cross explosion
+            // Merge two mystery emojis: cross explosion, with traces on every cell the fire crosses
             removeMystery(m);
             removeMystery(getMystery(r, c));
             board[r][c] = 0;
-            const now = performance.now();
-            const cells = [];
-            const add = (rr, cc) => { if (board[rr][cc] !== 0 && !cells.some(p => p[0] === rr && p[1] === cc)) cells.push([rr, cc]); };
-            for (let cc = 0; cc < N; cc++) add(r, cc);
-            for (let rr = 0; rr < N; rr++) add(rr, c);
+
+            const crossKeys = new Set();
+            const blockCells = [];
+            for (let cc = 0; cc < N; cc++) {
+              crossKeys.add(`${r},${cc}`);
+              if (board[r][cc] !== 0) blockCells.push([r, cc]);
+            }
+            for (let rr = 0; rr < N; rr++) {
+              const key = `${rr},${c}`;
+              if (crossKeys.has(key)) continue;
+              crossKeys.add(key);
+              if (board[rr][c] !== 0) blockCells.push([rr, c]);
+            }
+
+            crossKeys.forEach(key => {
+              const [tr, tc] = key.split(',').map(Number);
+              if (board[tr][tc] === 0) {
+                explosionTraces.push({ r: tr, c: tc, what: 'blank', color: randomSparkColorForTheme(), start: performance.now(), duration: EXPLOSION_TRACE_DURATION });
+                const cx = gridX + tc * cellSize + cellSize / 2;
+                const cy = gridY + tr * cellSize + cellSize / 2;
+                addExplosionParticle(cx, cy, '#ff7b00', 'circle', cellSize * 0.12, cellSize * 0.15, cellSize * 0.02, 350, 0, 0.4);
+              }
+            });
+
             let points = 120;
-            cells.forEach(([cr, cc]) => {
+            blockCells.forEach(([cr, cc]) => {
               const v = board[cr][cc];
+              const what = v < 0 ? 'mystery' : 'piece';
               board[cr][cc] = 0;
-              spawnLineExplosion(cr, cc, v, 1.6);
+              spawnLineExplosion(cr, cc, v, 2.0, what);
               points += 50;
             });
             spawnScorePopup(gridX + c * cellSize + cellSize / 2, gridY + r * cellSize + cellSize / 2, points, '✨');
             screenShake = Math.max(screenShake, 8);
             vibrate(45);
+            spawnAmbientEffect(2);
             clearLines();
             advanceMystery();
             startAnimate();
@@ -2058,57 +2098,34 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
       });
     }
 
-    function spawnLineExplosion(rr, cc, colorId, intensity = 1) {
-      const cx = gridX + cc * cellSize + cellSize / 2;
-      const cy = gridY + rr * cellSize + cellSize / 2;
-      const color = colorId > 0 ? COLORS[colorId] : (colorId < 0 ? '#ffd700' : '#7ee7ff');
-      const count = Math.floor(2 + intensity * 2.5);
-      for (let i = 0; i < count; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const speed = (0.4 + Math.random() * 1.3) * cellSize * 0.25 * intensity;
-        explosions.push({
-          x: cx, y: cy,
-          color,
-          start: performance.now(),
-          duration: 420 + Math.random() * 280 * intensity,
-          size: cellSize * (0.22 + Math.random() * 0.28),
-          grow: 0.5 + Math.random() * 0.8,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
-          gravity: cellSize * 0.035,
-          alpha: 0.9 + Math.random() * 0.1,
-          rotation: Math.random() * Math.PI,
-          spin: (Math.random() - 0.5) * 0.18,
-          type: Math.random() > 0.45 ? 'rect' : 'circle'
-        });
-      }
+    function randomShapeForTheme() {
+      const theme = EXPLOSION_THEMES[style] || EXPLOSION_THEMES.cartoon;
+      return theme.shapes[Math.floor(Math.random() * theme.shapes.length)];
+    }
+    function randomSparkColorForTheme() {
+      const theme = EXPLOSION_THEMES[style] || EXPLOSION_THEMES.cartoon;
+      const list = theme.sparks;
+      return list[Math.floor(Math.random() * list.length)];
     }
 
-    function spawnMegaExplosion(cx, cy, color, intensity = 1) {
-      const count = Math.floor(10 + intensity * 8);
-      for (let i = 0; i < count; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const speed = (0.6 + Math.random() * 2.2) * cellSize * 0.28 * intensity;
-        explosions.push({
-          x: cx, y: cy,
-          color,
-          start: performance.now(),
-          duration: 520 + Math.random() * 340 * intensity,
-          size: cellSize * (0.25 + Math.random() * 0.35),
-          grow: 0.9 + Math.random() * 1.1,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
-          gravity: cellSize * 0.05,
-          alpha: 1,
-          rotation: Math.random() * Math.PI,
-          spin: (Math.random() - 0.5) * 0.3,
-          type: Math.random() > 0.4 ? 'rect' : 'circle'
-        });
-      }
-      mysteryBursts.push({ x: cx, y: cy, start: performance.now(), big: true });
+    function addExplosionParticle(x, y, color, shape, size, speed, gravity, duration, spin, grow) {
+      const angle = Math.random() * Math.PI * 2;
+      explosions.push({
+        x, y, color, shape,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        gravity,
+        size,
+        grow: grow || 0.6,
+        start: performance.now(),
+        duration,
+        alpha: 0.9 + Math.random() * 0.1,
+        rotation: Math.random() * Math.PI,
+        spin: spin || (Math.random() - 0.5) * 0.15
+      });
     }
 
-    function spawnShockwave(cx, cy, color, scale = 1) {
+    function spawnRingExplosion(cx, cy, color, scale = 1) {
       explosions.push({
         x: cx, y: cy,
         color,
@@ -2117,6 +2134,144 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
         duration: 520,
         maxR: cellSize * scale
       });
+    }
+
+    function spawnAmbientEffect(lineCount) {
+      const ambient = (EXPLOSION_THEMES[style] || EXPLOSION_THEMES.cartoon).ambient;
+      if (!ambient) return;
+      const count = Math.min(24, 5 + lineCount * 4);
+      for (let i = 0; i < count; i++) {
+        const x = gridX + Math.random() * (N * cellSize);
+        const y = gridY + Math.random() * (N * cellSize);
+        if (ambient === 'snow') {
+          explosions.push({
+            x, y, start: performance.now(),
+            color: '#ffffff', shape: 'snowflake',
+            size: cellSize * (0.10 + Math.random() * 0.28),
+            vx: cellSize * (Math.random() - 0.5) * 0.04,
+            vy: cellSize * (0.03 + Math.random() * 0.05),
+            gravity: 0,
+            duration: 1000 + Math.random() * 900,
+            alpha: 0.7 + Math.random() * 0.2,
+            rotation: Math.random() * Math.PI,
+            spin: (Math.random() - 0.5) * 0.03,
+            grow: 0.1 + Math.random() * 0.2
+          });
+        } else if (ambient === 'bat') {
+          const right = Math.random() > 0.5 ? 1 : -1;
+          explosions.push({
+            x, y, start: performance.now(),
+            color: Math.random() > 0.5 ? '#ff7b00' : '#9d4edd', shape: 'bat',
+            size: cellSize * (0.18 + Math.random() * 0.24),
+            vx: cellSize * (0.08 + Math.random() * 0.12) * right,
+            vy: cellSize * (Math.random() - 0.5) * 0.04,
+            gravity: -cellSize * 0.001,
+            duration: 900 + Math.random() * 600,
+            alpha: 0.7 + Math.random() * 0.2,
+            rotation: Math.random() * Math.PI,
+            spin: right * 0.03,
+            grow: 0.1 + Math.random() * 0.2
+          });
+        } else {
+          explosions.push({
+            x, y, start: performance.now(),
+            color: randomSparkColorForTheme(), shape: 'star',
+            size: cellSize * (0.10 + Math.random() * 0.22),
+            vx: cellSize * (Math.random() - 0.5) * 0.10,
+            vy: -cellSize * (0.03 + Math.random() * 0.07),
+            gravity: cellSize * 0.005,
+            duration: 800 + Math.random() * 600,
+            alpha: 0.7 + Math.random() * 0.2,
+            rotation: Math.random() * Math.PI,
+            spin: (Math.random() - 0.5) * 0.10,
+            grow: 0.1 + Math.random() * 0.2
+          });
+        }
+      }
+    }
+
+    function spawnThemedMysteryBurst(m, intensity = 1) {
+      const cx = gridX + m.c * cellSize + cellSize / 2;
+      const cy = gridY + m.r * cellSize + cellSize / 2;
+      const color = m.nuisance ? '#ff4d6d' : randomSparkColorForTheme();
+      for (let i = 0; i < 8 + intensity * 5; i++) {
+        explosions.push({
+          x: cx, y: cy,
+          emoji: m.emoji || '✨',
+          color,
+          shape: 'emoji',
+          vx: (Math.random() - 0.5) * cellSize * (0.5 + intensity * 0.35),
+          vy: -cellSize * (0.3 + Math.random() * 0.7) - Math.random() * cellSize * 0.4,
+          gravity: cellSize * 0.055,
+          size: cellSize * (0.28 + Math.random() * 0.32),
+          start: performance.now(),
+          duration: 700 + Math.random() * 400 * intensity,
+          alpha: 1,
+          rotation: (Math.random() - 0.5) * 0.8,
+          spin: (Math.random() - 0.5) * 0.12,
+          grow: 0.4 + Math.random() * 0.4
+        });
+      }
+      spawnRingExplosion(cx, cy, color, 1.0 + intensity * 0.6);
+    }
+
+    function spawnLineExplosion(rr, cc, colorId, intensity = 1, what = 'piece') {
+      const cx = gridX + cc * cellSize + cellSize / 2;
+      const cy = gridY + rr * cellSize + cellSize / 2;
+      const baseColor = colorId > 0 ? COLORS[colorId] : (colorId < 0 ? '#ffd700' : '#7ee7ff');
+      const m = what === 'mystery' ? mysteries.find(x => x.r === rr && x.c === cc) : null;
+
+      explosionTraces.push({
+        r: rr, c: cc, what,
+        color: what === 'mystery' ? randomSparkColorForTheme() : baseColor,
+        emoji: m ? m.emoji : null,
+        start: performance.now(),
+        duration: EXPLOSION_TRACE_DURATION
+      });
+
+      const roll = Math.random();
+      const baseCount = Math.min(7, Math.floor(2 + intensity * 2.5));
+      const useSpark = what === 'mystery';
+
+      if (roll < 0.35) {
+        for (let i = 0; i < baseCount; i++) {
+          const shape = randomShapeForTheme();
+          const color = useSpark ? randomSparkColorForTheme() : baseColor;
+          const speed = (0.5 + Math.random() * 1.5) * cellSize * 0.24 * intensity;
+          addExplosionParticle(cx, cy, color, shape, cellSize * (0.16 + Math.random() * 0.26), speed, cellSize * 0.045 * intensity, 380 + Math.random() * 260 * intensity, (Math.random() - 0.5) * 0.22, 0.5 + Math.random() * 0.8);
+        }
+      } else if (roll < 0.65) {
+        spawnRingExplosion(cx, cy, useSpark ? randomSparkColorForTheme() : baseColor, 0.7 + intensity * 0.35);
+        for (let i = 0; i < Math.max(3, Math.floor(baseCount * 0.7)); i++) {
+          addExplosionParticle(cx, cy, randomSparkColorForTheme(), randomShapeForTheme(), cellSize * (0.10 + Math.random() * 0.18), cellSize * (0.08 + Math.random() * 0.16), cellSize * 0.025, 360 + Math.random() * 220, (Math.random() - 0.5) * 0.25, 0.3 + Math.random() * 0.5);
+        }
+      } else if (roll < 0.85) {
+        for (let i = 0; i < baseCount; i++) {
+          const color = useSpark ? randomSparkColorForTheme() : baseColor;
+          addExplosionParticle(cx, cy, color, 'circle', cellSize * (0.08 + Math.random() * 0.18), cellSize * (0.06 + Math.random() * 0.18) * intensity, cellSize * 0.07 * intensity, 320 + Math.random() * 200 * intensity, 0, 0.9 + Math.random());
+        }
+      } else {
+        for (let i = 0; i < baseCount + 1; i++) {
+          const shape = randomShapeForTheme();
+          const color = useSpark ? randomSparkColorForTheme() : baseColor;
+          addExplosionParticle(cx, cy, color, shape, cellSize * (0.12 + Math.random() * 0.30), cellSize * (0.03 + Math.random() * 0.10), -cellSize * 0.015, 650 + Math.random() * 350, (Math.random() - 0.5) * 0.12, 0.2);
+        }
+      }
+    }
+
+    function spawnMegaExplosion(cx, cy, color, intensity = 1, what = 'mystery') {
+      const count = Math.floor(10 + intensity * 8);
+      for (let i = 0; i < count; i++) {
+        const shape = what === 'mystery' ? randomShapeForTheme() : (Math.random() > 0.4 ? 'rect' : 'circle');
+        const col = what === 'mystery' ? randomSparkColorForTheme() : color;
+        const speed = (0.6 + Math.random() * 2.2) * cellSize * 0.28 * intensity;
+        addExplosionParticle(cx, cy, col, shape, cellSize * (0.22 + Math.random() * 0.32), speed, cellSize * 0.05 * intensity, 520 + Math.random() * 340 * intensity, (Math.random() - 0.5) * 0.25, 0.9 + Math.random());
+      }
+      spawnRingExplosion(cx, cy, what === 'mystery' ? randomSparkColorForTheme() : color, 1.2 + intensity * 0.8);
+    }
+
+    function spawnShockwave(cx, cy, color, scale = 1) {
+      spawnRingExplosion(cx, cy, color, scale);
     }
 
     function clearLines() {
@@ -2160,26 +2315,25 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
       const lineCount = rows.size + cols.size + (diag1 ? 1 : 0) + (diag2 ? 1 : 0);
       const intensity = 1 + (lineCount - 1) * 0.7;
       const now = performance.now();
-      let mysteryCleared = false;
-      let mysteryCellX = 0, mysteryCellY = 0;
+      const clearedMysteries = [];
       let cellsCleared = 0;
       let clearCenterX = 0, clearCenterY = 0;
 
       toClear.forEach(k => {
         const [rr, cc] = k.split(',').map(Number);
         const m = getMystery(rr, cc);
-        if (m && !m.nuisance) {
-          mysteryCleared = true;
-          mysteryCellX = gridX + cc * cellSize + cellSize / 2;
-          mysteryCellY = gridY + rr * cellSize + cellSize / 2;
-        }
+        if (m && !m.nuisance) clearedMysteries.push(m);
         clearCenterX += gridX + cc * cellSize + cellSize / 2;
         clearCenterY += gridY + rr * cellSize + cellSize / 2;
         cellsCleared++;
         const colorId = board[rr][cc];
+        const what = (m && !m.nuisance) ? 'mystery' : (colorId > 0 ? 'piece' : 'blank');
         board[rr][cc] = 0;
-        spawnLineExplosion(rr, cc, colorId, intensity);
+        spawnLineExplosion(rr, cc, colorId, intensity, what);
       });
+
+      // each cleared mystery gets its own themed emoji fountain, so multiple mysteries are celebrated individually
+      clearedMysteries.forEach(m => spawnThemedMysteryBurst(m, intensity));
 
       // remove cleared mysteries
       for (let i = mysteries.length - 1; i >= 0; i--) {
@@ -2190,8 +2344,17 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
       clearCenterY /= cellsCleared;
 
       if (lineCount > 1) {
-        spawnShockwave(clearCenterX, clearCenterY, '#7ee7ff', 2 + lineCount * 0.8);
+        spawnShockwave(clearCenterX, clearCenterY, randomSparkColorForTheme(), 2 + lineCount * 0.8);
         screenShake = Math.max(screenShake, lineCount * 5);
+        spawnAmbientEffect(lineCount);
+      }
+
+      const mysteryCleared = clearedMysteries.length > 0;
+      let mysteryCellX = 0, mysteryCellY = 0;
+      if (mysteryCleared) {
+        const last = clearedMysteries[clearedMysteries.length - 1];
+        mysteryCellX = gridX + last.c * cellSize + cellSize / 2;
+        mysteryCellY = gridY + last.r * cellSize + cellSize / 2;
       }
 
       const baseLinePoints = cellsCleared * 20;
@@ -2628,6 +2791,7 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
       }
 
       drawPendingMysteryDrops();
+      drawExplosionTraces();
       drawLineShiftHighlight();
       drawExplosions();
       drawMysteryBursts();
@@ -2651,6 +2815,99 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
       gridCtx.restore();
     }
 
+    function drawStarPath(ctx, cx, cy, spikes, outer, inner) {
+      let rot = Math.PI / 2 * 3;
+      let x = cx, y = cy;
+      let step = Math.PI / spikes;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - outer);
+      for (let i = 0; i < spikes; i++) {
+        x = cx + Math.cos(rot) * outer; y = cy + Math.sin(rot) * outer; ctx.lineTo(x, y); rot += step;
+        x = cx + Math.cos(rot) * inner; y = cy + Math.sin(rot) * inner; ctx.lineTo(x, y); rot += step;
+      }
+      ctx.lineTo(cx, cy - outer); ctx.closePath();
+    }
+
+    function drawParticleShape(ctx, shape, x, y, size, color) {
+      ctx.save();
+      ctx.translate(x, y);
+      const s = size;
+      ctx.fillStyle = color;
+      ctx.strokeStyle = color;
+      switch (shape) {
+        case 'rect':
+          ctx.fillRect(-s / 2, -s / 2, s, s);
+          break;
+        case 'circle':
+          ctx.beginPath(); ctx.arc(0, 0, s / 2, 0, Math.PI * 2); ctx.fill();
+          break;
+        case 'diamond':
+          ctx.beginPath();
+          ctx.moveTo(0, -s / 2); ctx.lineTo(s / 2, 0); ctx.lineTo(0, s / 2); ctx.lineTo(-s / 2, 0);
+          ctx.closePath(); ctx.fill();
+          break;
+        case 'star':
+          drawStarPath(ctx, 0, 0, 5, s / 2, s / 4);
+          ctx.fill();
+          break;
+        case 'snowflake':
+          ctx.lineWidth = Math.max(1, s * 0.08);
+          ctx.beginPath();
+          for (let k = 0; k < 6; k++) {
+            const a = k * Math.PI / 3;
+            ctx.moveTo(0, 0); ctx.lineTo(Math.cos(a) * s * 0.5, Math.sin(a) * s * 0.5);
+            ctx.moveTo(Math.cos(a) * s * 0.28, Math.sin(a) * s * 0.28); ctx.lineTo(Math.cos(a + 0.4) * s * 0.42, Math.sin(a + 0.4) * s * 0.42);
+            ctx.moveTo(Math.cos(a) * s * 0.28, Math.sin(a) * s * 0.28); ctx.lineTo(Math.cos(a - 0.4) * s * 0.42, Math.sin(a - 0.4) * s * 0.42);
+          }
+          ctx.stroke();
+          break;
+        case 'gift':
+          ctx.fillRect(-s / 2, -s / 2, s, s);
+          ctx.fillStyle = 'rgba(255,255,255,0.55)';
+          ctx.fillRect(-s * 0.08, -s / 2, s * 0.16, s);
+          ctx.fillRect(-s / 2, -s * 0.08, s, s * 0.16);
+          break;
+        case 'ribbon':
+          ctx.lineWidth = s * 0.12;
+          ctx.beginPath();
+          for (let k = 0; k < 3; k++) ctx.arc(-s / 4 + k * s * 0.25, 0, s * 0.22, 0, Math.PI * 2);
+          ctx.stroke();
+          break;
+        case 'bat':
+          ctx.beginPath();
+          ctx.moveTo(-s * 0.30, -s * 0.10);
+          ctx.quadraticCurveTo(-s * 0.55, -s * 0.45, -s * 0.15, -s * 0.25);
+          ctx.quadraticCurveTo(0, -s * 0.45, s * 0.15, -s * 0.25);
+          ctx.quadraticCurveTo(s * 0.55, -s * 0.45, s * 0.30, -s * 0.10);
+          ctx.quadraticCurveTo(s * 0.20, s * 0.15, 0, s * 0.35);
+          ctx.quadraticCurveTo(-s * 0.20, s * 0.15, -s * 0.30, -s * 0.10);
+          ctx.closePath(); ctx.fill();
+          break;
+        case 'pumpkin':
+          ctx.beginPath(); ctx.arc(0, s * 0.05, s * 0.40, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#1a0f00'; ctx.fillRect(-s * 0.04, -s * 0.40, s * 0.08, s * 0.22);
+          ctx.fillStyle = 'rgba(0,0,0,0.35)';
+          ctx.beginPath(); ctx.moveTo(-s * 0.16, -s * 0.06); ctx.lineTo(-s * 0.08, s * 0.06); ctx.lineTo(-s * 0.20, s * 0.06); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(s * 0.16, -s * 0.06); ctx.lineTo(s * 0.08, s * 0.06); ctx.lineTo(s * 0.20, s * 0.06); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(-s * 0.14, s * 0.16); ctx.quadraticCurveTo(0, s * 0.26, s * 0.14, s * 0.16); ctx.lineTo(0, s * 0.10); ctx.fill();
+          break;
+        case 'ghost':
+          ctx.fillStyle = '#e8e8e8';
+          ctx.beginPath(); ctx.arc(0, -s * 0.15, s * 0.35, Math.PI, 0); ctx.lineTo(s * 0.35, s * 0.35); ctx.lineTo(s * 0.12, s * 0.20); ctx.lineTo(0, s * 0.35); ctx.lineTo(-s * 0.12, s * 0.20); ctx.lineTo(-s * 0.35, s * 0.35); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(-s * 0.10, -s * 0.18, s * 0.06, 0, Math.PI * 2); ctx.arc(s * 0.10, -s * 0.18, s * 0.06, 0, Math.PI * 2); ctx.fill();
+          break;
+        case 'slime':
+          ctx.beginPath(); ctx.arc(0, 0, s * 0.32, 0, Math.PI * 2); ctx.fill();
+          ctx.globalCompositeOperation = 'source-atop';
+          ctx.fillStyle = 'rgba(255,255,255,0.45)'; ctx.beginPath(); ctx.arc(-s * 0.10, -s * 0.10, s * 0.10, 0, Math.PI * 2); ctx.fill();
+          ctx.globalCompositeOperation = 'source-over';
+          break;
+        default:
+          ctx.beginPath(); ctx.arc(0, 0, s / 2, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.restore();
+    }
+
     function drawExplosions() {
       const now = performance.now();
       for (let i = explosions.length - 1; i >= 0; i--) {
@@ -2659,9 +2916,10 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
         if (t >= 1) { explosions.splice(i, 1); continue; }
         const alpha = (p.alpha || 1) * (1 - t);
 
-        if (p.vx !== undefined) p.x += p.vx;
-        if (p.vy !== undefined) p.y += p.vy;
+        p.x += p.vx || 0;
+        p.y += p.vy || 0;
         if (p.gravity) p.vy += p.gravity;
+        if (p.spin !== undefined) p.rotation = (p.rotation || 0) + p.spin;
 
         gridCtx.save();
         gridCtx.globalAlpha = alpha;
@@ -2683,17 +2941,68 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
         const startSize = p.size || cellSize;
         const size = startSize * (1 + t * (p.grow || 0.7));
 
-        gridCtx.fillStyle = color;
-        gridCtx.shadowColor = color;
-        gridCtx.shadowBlur = 14 * alpha;
-        if (p.type === 'circle') {
-          gridCtx.beginPath();
-          gridCtx.arc(p.x, p.y, size / 2, 0, Math.PI * 2);
-          gridCtx.fill();
+        gridCtx.translate(p.x, p.y);
+        if (p.rotation) gridCtx.rotate(p.rotation);
+
+        if (p.shape === 'emoji') {
+          gridCtx.font = `bold ${Math.floor(size)}px serif`;
+          gridCtx.textAlign = 'center';
+          gridCtx.textBaseline = 'middle';
+          gridCtx.shadowColor = color;
+          gridCtx.shadowBlur = 12 * alpha;
+          gridCtx.fillText(p.emoji || '✨', 0, 0);
         } else {
-          gridCtx.translate(p.x, p.y);
-          if (p.rotation !== undefined) gridCtx.rotate(p.rotation + t * (p.spin || 0));
-          gridCtx.fillRect(-size / 2, -size / 2, size, size);
+          drawParticleShape(gridCtx, p.shape || 'circle', 0, 0, size, color);
+        }
+        gridCtx.restore();
+      }
+    }
+
+    function drawExplosionTraces() {
+      const now = performance.now();
+      for (let i = explosionTraces.length - 1; i >= 0; i--) {
+        const tr = explosionTraces[i];
+        const age = (now - tr.start) / tr.duration;
+        if (age >= 1) { explosionTraces.splice(i, 1); continue; }
+        const x = gridX + tr.c * cellSize;
+        const y = gridY + tr.r * cellSize;
+        const cx = x + cellSize / 2;
+        const cy = y + cellSize / 2;
+        const alpha = 1 - age;
+        gridCtx.save();
+        if (tr.what === 'piece') {
+          const s = cellSize * (0.78 - age * 0.25);
+          gridCtx.globalAlpha = 0.45 * alpha;
+          gridCtx.fillStyle = tr.color || '#7ee7ff';
+          gridCtx.fillRect(cx - s / 2, cy - s / 2, s, s);
+          gridCtx.strokeStyle = 'rgba(0,0,0,0.55)';
+          gridCtx.lineWidth = Math.max(1, cellSize * 0.07);
+          gridCtx.globalAlpha = 0.6 * alpha;
+          gridCtx.beginPath();
+          gridCtx.moveTo(cx - s * 0.25, cy - s * 0.10); gridCtx.lineTo(cx, cy + s * 0.15); gridCtx.lineTo(cx + s * 0.25, cy - s * 0.05);
+          gridCtx.stroke();
+        } else if (tr.what === 'mystery') {
+          gridCtx.globalAlpha = 0.85 * alpha;
+          gridCtx.font = `bold ${Math.floor(cellSize * (0.55 - age * 0.25))}px serif`;
+          gridCtx.textAlign = 'center';
+          gridCtx.textBaseline = 'middle';
+          gridCtx.shadowColor = tr.color || '#ffd700';
+          gridCtx.shadowBlur = 10 * alpha;
+          gridCtx.fillText(tr.emoji || '✨', cx, cy);
+        } else {
+          gridCtx.globalAlpha = 0.55 * alpha;
+          gridCtx.fillStyle = `rgba(30, 25, 20, ${0.6 * alpha})`;
+          gridCtx.beginPath();
+          gridCtx.arc(cx, cy, cellSize * (0.22 + age * 0.08), 0, Math.PI * 2);
+          gridCtx.fill();
+          if (age < 0.6) {
+            gridCtx.strokeStyle = `rgba(255, 120, 40, ${0.7 - age})`;
+            gridCtx.lineWidth = 2;
+            gridCtx.beginPath();
+            gridCtx.moveTo(cx - cellSize * 0.15, cy + cellSize * 0.12);
+            gridCtx.quadraticCurveTo(cx, cy - cellSize * 0.18, cx + cellSize * 0.15, cy + cellSize * 0.10);
+            gridCtx.stroke();
+          }
         }
         gridCtx.restore();
       }
@@ -2817,7 +3126,7 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
         gridCanvas.style.transform = '';
       }
       const activeSpawnAnim = mysteries.some(m => performance.now() - m.spawnTime < SPAWN_ANIM_DURATION + 40);
-      if (explosions.length || scorePopups.length || mysteryBursts.length || starBursts.length || screenShake > 0 || activeSpawnAnim || mysteries.length > 0) {
+      if (explosions.length || scorePopups.length || mysteryBursts.length || starBursts.length || explosionTraces.length || screenShake > 0 || activeSpawnAnim || mysteries.length > 0) {
         animFrame = requestAnimationFrame(animate);
       } else {
         animFrame = null;
@@ -3277,6 +3586,7 @@ The active mode is shown in plain tiny text directly under the score. Swipe up o
       updateMoveCount();
       screenShake = 0;
       starBursts = [];
+      explosionTraces = [];
       if (mysteryDrag && mysteryDrag.ghost) mysteryDrag.ghost.remove();
       mysteryDrag = null;
       score = 0;
